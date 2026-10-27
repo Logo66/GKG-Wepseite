@@ -1,0 +1,16 @@
+<!-- @dsCard group="Wetter" height=72 subtitle="Immer Wort + Icon + Farbe" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>FlightStatus – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-row"></div>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.FlightStatus, { status: 'go' }),
+    h(G.FlightStatus, { status: 'caution' }),
+    h(G.FlightStatus, { status: 'stop' }),
+    h(G.FlightStatus, { status: 'caution', label: 'Föhn-Tendenz' })));
+</script>
+</body>
+</html>

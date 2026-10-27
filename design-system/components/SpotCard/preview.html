@@ -1,0 +1,15 @@
+<!-- @dsCard group="Fluggebiete" height=390 subtitle="Fluggebiet mit Windrose" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>SpotCard – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-grid"></div>
+<p class="gkg-note">Beispieldaten – Namen und Höhen sind Platzhalter.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.SpotCard, { name: 'Musteralp', region: 'Glarus Nord', takeoff: "1'450", landing: '480', directions: ['S', 'SW', 'W'], level: 'Einsteiger', status: 'go' }),
+    h(G.SpotCard, { name: 'Beispielegg', region: 'Glarus Süd', takeoff: "1'900", landing: '650', directions: ['O', 'SO'], level: 'Fortgeschritten', status: 'stop' })));
+</script>
+</body>
+</html>

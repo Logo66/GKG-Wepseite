@@ -1,0 +1,16 @@
+<!-- @dsCard group="Jahreskarte" height=768 subtitle="Digitale Karte mit QR – Wallet-Ansicht" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>PassCard – Vorschau</title></head>
+<body>
+<div id="root" style="padding:var(--space-6);display:flex;justify-content:center"></div>
+<p class="gkg-note" style="text-align:center">Muster-QR – der echte Code wird serverseitig signiert erzeugt.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(G.PassCard, {
+    holder: 'Anna Muster', kind: 'Start- & Landeplatz', season: 'Jahreskarte 2027', number: '2027-0142',
+    fields: [['Gültig', 'Saison 2027'], ['Kartennr.', '2027-0142'], ['Typ', 'Gast'], ['Bezahlt', 'CHF 40.00']]
+  }));
+</script>
+</body>
+</html>

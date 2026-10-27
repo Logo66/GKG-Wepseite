@@ -1,0 +1,16 @@
+<!-- @dsCard group="Verwaltung" height=280 width=900 subtitle="Kennzahl im Dashboard" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>StatTile – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-row" style="align-items:stretch"></div>
+<p class="gkg-note">Beispielwerte.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.StatTile, { label: 'Verkaufte Jahreskarten', value: '128', delta: '12 diese Woche', hint: 'Saison 2027' }),
+    h(G.StatTile, { label: 'Offene Beiträge', value: 'CHF 640.00', delta: '3 Mahnungen', trend: 'down' }),
+    h(G.StatTile, { label: 'Aktive Inserate', value: '17', hint: 'Marktplatz' })));
+</script>
+</body>
+</html>

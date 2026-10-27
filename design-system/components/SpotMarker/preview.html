@@ -1,0 +1,16 @@
+<!-- @dsCard group="Fluggebiete" height=220 subtitle="Marker der interaktiven Karte" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>SpotMarker – Vorschau</title></head>
+<body>
+<div style="padding:var(--space-6)"><div id="root" style="position:relative;height:150px;border-radius:var(--radius-lg);background:var(--surface-sunken);border:1px solid var(--line);"></div></div>
+<script>
+  var G = window.GKG, h = React.createElement;
+  function at(x, y, el) { return h('div', { key: x, style: { position: 'absolute', left: x, top: y } }, el); }
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    at('8%', 28, h(G.SpotMarker, { label: 'Musteralp', status: 'go' })),
+    at('38%', 18, h(G.SpotMarker, { label: 'Beispielegg', status: 'caution', active: true })),
+    at('70%', 40, h(G.SpotMarker, { label: 'Testhorn', status: 'stop' }))));
+</script>
+</body>
+</html>

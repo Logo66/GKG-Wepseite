@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* GKG components — every value comes from tokens.css */
+body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 27px; background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; }
+.gkg-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; padding: var(--space-6); }
+.gkg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: var(--space-6); padding: var(--space-6); align-items: start; }
+.gkg-note { font-size: 13px; line-height: 18px; color: var(--ink-muted); padding: 0 var(--space-6) var(--space-4); }
+.gkg-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Button */
+.gkg-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-height); padding: 0 var(--space-5); border-radius: var(--radius-md); border: 2px solid transparent; font: 700 17px/1 var(--font-body); text-decoration: none; cursor: pointer; transition: transform .12s ease, background-color .12s ease; }
+.gkg-btn:active { transform: translateY(1px); }
+.gkg-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.gkg-btn-lg { min-height: var(--control-height-lg); padding: 0 var(--space-8); font-size: 19px; }
+.gkg-btn-primary { background: var(--sky); color: var(--on-sky); }
+.gkg-btn-wing { background: var(--wing); color: var(--on-wing); }
+.gkg-btn-quiet { background: var(--surface-raised); color: var(--ink); border-color: var(--line-strong); }
+.gkg-btn-ghost { background: transparent; color: var(--sky); }
+.gkg-btn-ghost:hover, .gkg-btn-quiet:hover { background: var(--sky-soft); }
+.gkg-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.gkg-btn svg { width: 20px; height: 20px; flex: none; }
+
+/* FlightStatus */
+.gkg-status { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-3) 2px var(--space-2); border-radius: var(--radius-full); font: 700 14px/20px var(--font-body); letter-spacing: .02em; white-space: nowrap; }
+.gkg-status svg { width: 16px; height: 16px; flex: none; }
+.gkg-status-go { background: var(--go-soft); color: var(--go); }
+.gkg-status-caution { background: var(--caution-soft); color: var(--caution); }
+.gkg-status-stop { background: var(--stop-soft); color: var(--stop); }
+.gkg-badge-new { display: inline-flex; align-items: center; padding: 2px var(--space-2); border-radius: var(--radius-full); background: var(--thermik); color: var(--on-thermik); font: 700 14px/20px var(--font-body); }
+
+/* Cards shared */
+.gkg-card { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.gkg-card-body { padding: var(--space-6); }
+.gkg-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.gkg-title { margin: 0; font: 600 20px/26px var(--font-display); color: var(--ink); }
+.gkg-meta { margin: 0; font-size: 15px; line-height: 22px; color: var(--ink-muted); }
+.gkg-data { font: 500 14px/20px var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* WeatherCard */
+.gkg-wx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
+.gkg-wx-val { white-space: nowrap; font: 500 32px/36px var(--font-mono); letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.gkg-wx-val small { font-size: 15px; letter-spacing: 0; color: var(--ink-muted); margin-left: var(--space-1); }
+.gkg-wx-lbl { font: 700 14px/20px var(--font-body); color: var(--ink-muted); }
+.gkg-wx-wind { display: flex; align-items: center; gap: var(--space-3); }
+.gkg-wx-arrow { width: 44px; height: 44px; flex: none; border-radius: var(--radius-full); background: var(--sky-soft); color: var(--sky); display: grid; place-items: center; }
+.gkg-wx-arrow svg { width: 24px; height: 24px; }
+.gkg-wx-foot { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.gkg-pulse { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--go); box-shadow: 0 0 0 3px var(--go-soft); flex: none; }
+
+/* SpotCard */
+.gkg-spot-top { display: flex; gap: var(--space-4); align-items: center; margin-top: var(--space-4); }
+.gkg-rose { width: 72px; height: 72px; flex: none; }
+.gkg-rose .on { fill: var(--sky); }
+.gkg-rose .off { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1; }
+.gkg-rose text { font: 700 9px var(--font-body); fill: var(--ink-muted); }
+.gkg-facts { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); margin: 0; }
+.gkg-facts dt { font: 700 14px/20px var(--font-body); color: var(--ink-muted); }
+.gkg-facts dd { margin: 0; white-space: nowrap; font: 500 14px/20px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.gkg-card-actions { display: flex; gap: var(--space-3); margin-top: var(--space-6); flex-wrap: wrap; }
+
+/* SpotMarker */
+.gkg-marker { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: var(--space-1); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink); }
+.gkg-marker-pin { width: 40px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; border: 3px solid var(--surface-raised); box-shadow: var(--shadow-sm); }
+.gkg-marker-pin svg { width: 18px; height: 18px; transform: rotate(45deg); }
+.gkg-marker-go .gkg-marker-pin { background: var(--go); color: var(--surface-raised); }
+.gkg-marker-caution .gkg-marker-pin { background: var(--caution); color: var(--surface-raised); }
+.gkg-marker-stop .gkg-marker-pin { background: var(--stop); color: var(--surface-raised); }
+.gkg-marker-active .gkg-marker-pin { width: 52px; height: 52px; border-color: var(--wing); box-shadow: var(--shadow-lg); }
+.gkg-marker-label { padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--surface-raised); box-shadow: var(--shadow-sm); font: 700 14px/24px var(--font-body); white-space: nowrap; }
+.gkg-marker:focus-visible { outline: 2px solid transparent; }
+.gkg-marker:focus-visible .gkg-marker-label { box-shadow: var(--focus-ring); }
+
+/* PassCard */
+.gkg-pass { width: 340px; max-width: 100%; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid var(--line); }
+.gkg-pass-band { background: var(--sky); color: var(--on-sky); padding: var(--space-4) var(--space-6); display: flex; align-items: center; justify-content: space-between; }
+.gkg-pass-mark { font: 800 26px/1 var(--font-display); letter-spacing: -.02em; }
+.gkg-pass-kind { font: 700 14px/20px var(--font-body); text-align: right; }
+.gkg-pass-body { padding: var(--space-6); }
+.gkg-pass-holder { font: 600 20px/26px var(--font-display); margin: var(--space-1) 0 var(--space-4); }
+.gkg-pass-fields { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.gkg-pass-qr { margin: var(--space-6) auto 0; width: 168px; padding: var(--space-3); border-radius: var(--radius-md); background: var(--qr-ground); }
+.gkg-pass-qr svg { display: block; width: 100%; height: auto; }
+.gkg-pass-qr rect { fill: var(--qr-ink); }
+.gkg-pass-hint { text-align: center; margin-top: var(--space-2); }
+.gkg-wallet { display: grid; gap: var(--space-2); padding: 0 var(--space-6) var(--space-6); }
+.gkg-wallet .gkg-btn { background: var(--ink); border-color: var(--ink); color: var(--surface-raised); width: 100%; font-size: 15px; min-height: var(--tap-target); }
+
+/* BuyBox */
+.gkg-buy { max-width: 420px; }
+.gkg-price { display: flex; align-items: baseline; gap: var(--space-2); margin: var(--space-4) 0; }
+.gkg-price-cur { font: 700 19px/1 var(--font-body); color: var(--wing-ink); }
+.gkg-price-val { font: 700 64px/1 var(--font-display); letter-spacing: -.03em; color: var(--ink); }
+.gkg-price-per { font-size: 15px; color: var(--ink-muted); }
+.gkg-perks { list-style: none; margin: 0 0 var(--space-6); padding: 0; display: grid; gap: var(--space-2); }
+.gkg-perks li { display: flex; gap: var(--space-2); align-items: flex-start; }
+.gkg-perks svg { width: 20px; height: 20px; color: var(--go); flex: none; margin-top: 3px; }
+.gkg-buy .gkg-btn { width: 100%; }
+.gkg-buy-note { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.gkg-buy-note a { color: var(--link); font-weight: 700; }
+.gkg-methods { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.gkg-chip { display: inline-flex; align-items: center; padding: 0 var(--space-2); min-height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); font: 700 13px/1 var(--font-body); color: var(--ink-muted); background: var(--surface-raised); }
+
+/* ListingCard */
+.gkg-listing-img { aspect-ratio: 16 / 10; background: var(--surface-sunken); display: grid; place-items: center; color: var(--ink-muted); position: relative; }
+.gkg-listing-img img { width: 100%; height: 100%; object-fit: cover; }
+.gkg-listing-img svg { width: 56px; height: 56px; opacity: .7; }
+.gkg-listing-img .gkg-badge-new { position: absolute; top: var(--space-3); left: var(--space-3); }
+.gkg-listing-price { font: 700 26px/32px var(--font-display); color: var(--ink); margin: var(--space-2) 0 0; }
+.gkg-listing-price span { font: 700 15px/1 var(--font-body); color: var(--wing-ink); margin-right: var(--space-1); }
+.gkg-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+/* PassCard photo */
+.gkg-pass-person { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); }
+.gkg-pass-person .gkg-pass-holder { margin: var(--space-1) 0 0; }
+.gkg-pass-photo { width: 64px; height: 64px; flex: none; border-radius: var(--radius-full); overflow: hidden; background: var(--sky-soft); color: var(--sky); display: grid; place-items: center; font: 700 22px/1 var(--font-display); }
+.gkg-pass-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ProductCard */
+.gkg-opt { border: 0; margin: var(--space-4) 0 0; padding: 0; min-width: 0; }
+.gkg-opt legend { padding: 0; margin-bottom: var(--space-2); }
+.gkg-swatches, .gkg-sizes { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.gkg-swatch, .gkg-size { position: relative; cursor: pointer; }
+.gkg-swatch input, .gkg-size input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.gkg-swatch span:not(.gkg-vh) { display: block; width: 32px; height: 32px; border-radius: var(--radius-full); border: 1px solid var(--line-strong); box-shadow: inset 0 0 0 2px var(--surface-raised); }
+.gkg-swatch input:checked + span { outline: 3px solid var(--sky); outline-offset: 2px; }
+.gkg-swatch input:focus-visible + span { box-shadow: inset 0 0 0 2px var(--surface-raised), var(--focus-ring); }
+.gkg-size span { display: inline-grid; place-items: center; min-width: var(--tap-target); height: var(--tap-target); padding: 0 var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--line-strong); font: 700 15px/1 var(--font-body); color: var(--ink); background: var(--surface-raised); }
+.gkg-size input:checked + span { background: var(--sky); border-color: var(--sky); color: var(--on-sky); }
+.gkg-size input:disabled + span { color: var(--ink-muted); border-style: dashed; text-decoration: line-through; cursor: not-allowed; }
+.gkg-size input:focus-visible + span { box-shadow: var(--focus-ring); }
+.gkg-btn-block { width: 100%; margin-top: var(--space-6); }
+
+/* DataTable */
+.gkg-table-wrap { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow-x: auto; }
+.gkg-table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 22px; }
+.gkg-table caption { text-align: left; padding: var(--space-4) var(--space-6); font: 600 20px/26px var(--font-display); }
+.gkg-table th { text-align: left; font: 700 14px/20px var(--font-body); color: var(--ink-muted); padding: var(--space-3) var(--space-6); border-bottom: 2px solid var(--line-strong); white-space: nowrap; }
+.gkg-table td { padding: var(--space-3) var(--space-6); border-bottom: 1px solid var(--line); vertical-align: middle; }
+.gkg-table tr:last-child td { border-bottom: 0; }
+.gkg-table tbody tr:hover { background: var(--sky-soft); }
+.gkg-table .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.gkg-table th.num { font-family: var(--font-body); }
+.gkg-role { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-sm); background: var(--surface-sunken); border: 1px solid var(--line); font: 700 13px/24px var(--font-body); color: var(--ink); white-space: nowrap; }
+.gkg-role::before { content: ""; width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--sky); }
+
+/* StatTile */
+.gkg-stat { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6); min-width: 200px; }
+.gkg-stat-val { font: 700 40px/44px var(--font-display); letter-spacing: -.02em; margin: var(--space-2) 0; color: var(--ink); }
+.gkg-stat-delta { font: 700 14px/20px var(--font-body); }
+.gkg-stat-delta.up { color: var(--go); }
+.gkg-stat-delta.down { color: var(--stop); }
+
+/* SiteHeader */
+.gkg-header { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-3) var(--space-8); background: var(--surface-raised); border-bottom: 1px solid var(--line); }
+.gkg-logo { display: inline-flex; align-items: baseline; gap: var(--space-2); text-decoration: none; color: var(--ink); }
+.gkg-logo b { font: 800 28px/1 var(--font-display); letter-spacing: -.03em; }
+.gkg-logo span { font: 700 13px/1.2 var(--font-body); color: var(--ink-muted); max-width: 110px; }
+.gkg-nav { display: flex; gap: var(--space-1); margin: 0 auto 0 var(--space-4); padding: 0; list-style: none; }
+.gkg-nav a { display: inline-flex; align-items: center; min-height: var(--tap-target); padding: 0 var(--space-3); border-radius: var(--radius-md); font: 700 16px/1 var(--font-body); color: var(--ink); text-decoration: none; }
+.gkg-nav a:hover { background: var(--surface-sunken); }
+.gkg-nav a[aria-current="page"] { background: var(--sky-soft); color: var(--sky); }
+.gkg-nav a:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.gkg-header-actions { display: flex; gap: var(--space-2); align-items: center; }

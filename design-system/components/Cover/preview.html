@@ -1,0 +1,58 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>GKG</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--surface); color:var(--ink); font-family:var(--font-body); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .sky { fill:var(--sky); }
+  .wing { fill:var(--wing); }
+  .deep { fill:var(--ink); }
+  .thermik { fill:var(--thermik); }
+  .blk { rx:var(--radius-lg); }
+  .disc { rx:var(--space-8); }
+  .disc-sm { rx:var(--space-4); }
+  .cell { fill:var(--surface); rx:var(--radius-sm); }
+  .words { position:absolute; left:var(--space-8); bottom:var(--space-6); max-width:440px; }
+  .name { margin:0; font-family:var(--font-display); font-size:120px; line-height:.9; font-weight:800; letter-spacing:-.04em; color:var(--ink); }
+  .tag { margin:var(--space-2) 0 0 4px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      sky 240x288 bled off the top (the identity colour, largest) · wing 128x128 (the canopy orange) · ink 96x224 bled off the right edge · thermik discs 64 and 32 inside the wing block, where they read in both themes
+  arrangement one tall sky slab with two satellites, all bottoms on one line space-6 above the edge, space-4 gutters
+  pattern     a paraglider canopy: nine cells cut in surface along an arc over the sky slab, tapering to the wingtips - from the README's "Kappe aus Zellen" motif and the radius note "Weich wie eine Kappe"
+  scales      sides in space-8 multiples; gutters space-4; block corners radius-lg; cells rx radius-sm; discs rx space-8 and space-4 (half their side)
+-->
+<rect class="sky blk" x="16" y="-24" width="240" height="288" rx="20"/>
+<rect class="wing blk" x="272" y="136" width="128" height="128" rx="20"/>
+<rect class="deep blk" x="416" y="40" width="96" height="224" rx="20"/>
+<rect class="thermik disc" x="320" y="152" width="64" height="64" rx="32"/>
+<rect class="thermik disc-sm" x="288" y="216" width="32" height="32" rx="16"/>
+<rect class="cell" x="41.7" y="145.9" width="16" height="32" rx="6" transform="rotate(-64 49.7 161.9)"/>
+<rect class="cell" x="56.2" y="122.3" width="17" height="35" rx="6" transform="rotate(-48 64.7 139.8)"/>
+<rect class="cell" x="76.1" y="103.6" width="18" height="38" rx="6" transform="rotate(-32 85.1 122.6)"/>
+<rect class="cell" x="100.0" y="91.2" width="19" height="41" rx="6" transform="rotate(-16 109.5 111.7)"/>
+<rect class="cell" x="126.0" y="86.0" width="20" height="44" rx="6" transform="rotate(0 136.0 108.0)"/>
+<rect class="cell" x="153.0" y="91.2" width="19" height="41" rx="6" transform="rotate(16 162.5 111.7)"/>
+<rect class="cell" x="177.9" y="103.6" width="18" height="38" rx="6" transform="rotate(32 186.9 122.6)"/>
+<rect class="cell" x="198.8" y="122.3" width="17" height="35" rx="6" transform="rotate(48 207.3 139.8)"/>
+<rect class="cell" x="214.3" y="145.9" width="16" height="32" rx="6" transform="rotate(64 222.3 161.9)"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">GKG</h1>
+<p class="tag">Gleitschirmfliegen im Glarnerland. Frisch, klar, für alle.</p>
+</div>
+</div>
+</body>
+</html>

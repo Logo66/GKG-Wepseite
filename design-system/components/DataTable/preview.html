@@ -1,0 +1,28 @@
+<!-- @dsCard group="Verwaltung" height=366 width=900 subtitle="Mitgliederliste im Backoffice" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>DataTable – Vorschau</title></head>
+<body>
+<div id="root" style="padding:var(--space-6)"></div>
+<p class="gkg-note">Beispieldaten – fiktive Personen.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  var Role = G.DataTable.Role;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(G.DataTable, {
+    caption: 'Mitglieder',
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'kind', label: 'Mitgliedschaft' },
+      { key: 'pass', label: 'Jahreskarte', render: function (r) { return h(G.FlightStatus, { status: r.pass ? 'go' : 'caution', label: r.pass ? 'Gültig' : 'Offen' }); } },
+      { key: 'role', label: 'Ressort', render: function (r) { return r.role ? h(Role, null, r.role) : '–'; } },
+      { key: 'fee', label: 'Beitrag', align: 'right' }
+    ],
+    rows: [
+      { id: 1, name: 'Anna Muster', kind: 'Aktiv', pass: true, role: 'Kasse', fee: '80.00' },
+      { id: 2, name: 'Reto Beispiel', kind: 'Aktiv', pass: true, role: 'Fluggebiete', fee: '80.00' },
+      { id: 3, name: 'Nina Test', kind: 'Junior', pass: false, role: null, fee: '40.00' }
+    ]
+  }));
+</script>
+</body>
+</html>

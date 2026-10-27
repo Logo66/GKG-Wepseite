@@ -1,0 +1,17 @@
+<!-- @dsCard group="Jahreskarte" height=585 subtitle="Kaufangebot CHF 40.00 mit Mitglieder-Hinweis" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>BuyBox – Vorschau</title></head>
+<body>
+<div id="root" style="padding:var(--space-6)"></div>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(G.BuyBox, {
+    title: 'Jahreskarte 2027', badge: 'Neu digital', price: 40, per: 'pro Saison',
+    perks: ['Gratis fliegen in allen GKG-Fluggebieten', 'QR-Code direkt in Apple Wallet oder Google Wallet', 'Quittung per E-Mail'],
+    methods: ['TWINT', 'Kreditkarte', 'PostFinance', 'Apple Pay', 'Google Pay'],
+    note: h(React.Fragment, null, 'Für Aktivmitglieder gratis. ', h('a', { href: '#' }, 'Für CHF 70 Mitglied werden'), ' – Karte inklusive.')
+  }));
+</script>
+</body>
+</html>

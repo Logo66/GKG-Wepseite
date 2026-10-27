@@ -1,0 +1,19 @@
+<!-- @dsCard group="Shop" height=872 subtitle="Kleider mit Klub-Logo" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>ProductCard – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-grid"></div>
+<p class="gkg-note">Beispieldaten – Sortiment, Farben und Preise legt der Vorstand fest.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.ProductCard, { line: 'Klub-Kollektion', name: 'Hoodie GKG', price: 59, badge: 'Neu',
+      colors: [{ name: 'Gletscher', value: '#0a6b78' }, { name: 'Nacht', value: '#10222a' }, { name: 'Firn', value: '#f5f7f4' }],
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], soldOut: ['XS'], hint: 'Sammelbestellung bis 31.3. · Abholung am Klubabend oder Versand' }),
+    h(G.ProductCard, { line: 'Klub-Kollektion', name: 'Cap GKG', price: 25,
+      colors: [{ name: 'Schirm-Orange', value: '#ff5a24' }, { name: 'Nacht', value: '#10222a' }],
+      hint: 'Einheitsgrösse' })));
+</script>
+</body>
+</html>

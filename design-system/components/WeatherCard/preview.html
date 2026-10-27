@@ -1,0 +1,15 @@
+<!-- @dsCard group="Wetter" height=456 subtitle="Live-Werte einer Messstation" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>WeatherCard – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-grid"></div>
+<p class="gkg-note">Beispieldaten – keine echten Messwerte.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.WeatherCard, { station: 'Startplatz Musteralp', altitude: "1'450", status: 'go', wind: 12, gust: 18, direction: 225, temperature: 9, cloudBase: "2'600", updated: 'vor 4 Min.', source: 'Messstation' }),
+    h(G.WeatherCard, { station: 'Landeplatz Musterwiese', altitude: '480', status: 'caution', wind: 21, gust: 34, direction: 180, temperature: 16, updated: 'vor 2 Min.', source: 'Messstation' })));
+</script>
+</body>
+</html>

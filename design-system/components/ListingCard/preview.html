@@ -1,0 +1,15 @@
+<!-- @dsCard group="Shop" height=602 subtitle="Inserat im Gebrauchtmarkt" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>ListingCard – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-grid"></div>
+<p class="gkg-note">Beispieldaten – keine echten Inserate.</p>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.ListingCard, { category: 'Schirm', title: 'Musterschirm M, EN-B', price: 1450, tags: ['Gr. M', '85–105 kg', 'ca. 90 h', 'Check 2026'], seller: 'Reto B.', posted: 'vor 2 Tagen', isNew: true }),
+    h(G.ListingCard, { category: 'Gurtzeug', title: 'Leichtgurtzeug mit Protektor', price: 380, tags: ['Gr. L', 'Wie neu'], seller: 'Nina T.', posted: 'vor 1 Woche' })));
+</script>
+</body>
+</html>

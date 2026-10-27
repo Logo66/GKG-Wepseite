@@ -1,0 +1,17 @@
+<!-- @dsCard group="Aktionen" height=164 subtitle="primary · wing · quiet · ghost" -->
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>Button – Vorschau</title></head>
+<body>
+<div id="root" class="gkg-row"></div>
+<script>
+  var G = window.GKG, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
+    h(G.Button, { variant: 'primary' }, 'Mitglied werden'),
+    h(G.Button, { variant: 'wing', size: 'lg' }, 'Jahreskarte kaufen'),
+    h(G.Button, { variant: 'quiet' }, 'Alle Fluggebiete'),
+    h(G.Button, { variant: 'ghost' }, 'Mehr erfahren'),
+    h(G.Button, { variant: 'primary', disabled: true }, 'Ausverkauft')));
+</script>
+</body>
+</html>
