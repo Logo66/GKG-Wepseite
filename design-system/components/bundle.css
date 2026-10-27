@@ -55,6 +55,8 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-rose text { font: 700 9px var(--font-body); fill: var(--ink-muted); }
 .gkg-facts { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); margin: 0; }
 .gkg-facts dt { font: 700 14px/20px var(--font-body); color: var(--ink-muted); }
+.gkg-facts dd.gkg-dd-text { font-family: var(--font-body); font-weight: 700; }
+.gkg-spot-note { margin: var(--space-4) 0 0; font-size: 15px; line-height: 22px; color: var(--ink-muted); }
 .gkg-facts dd { margin: 0; white-space: nowrap; font: 500 14px/20px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .gkg-card-actions { display: flex; gap: var(--space-3); margin-top: var(--space-6); flex-wrap: wrap; }
 
@@ -161,3 +163,22 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-nav a[aria-current="page"] { background: var(--sky-soft); color: var(--sky); }
 .gkg-nav a:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .gkg-header-actions { display: flex; gap: var(--space-2); align-items: center; }
+.gkg-nav-wrap { margin-right: auto; }
+.gkg-nav-login { display: none; }
+.gkg-menu-btn { display: none; align-items: center; min-height: var(--tap-target); padding: 0 var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--ink); font: 700 16px/1 var(--font-body); cursor: pointer; }
+.gkg-menu-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+@media (max-width: 900px) {
+  .gkg-header { flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .gkg-logo { margin-right: auto; }
+  .gkg-nav-wrap { display: none; order: 3; flex: 1 0 100%; margin: 0; }
+  .gkg-header-open .gkg-nav-wrap { display: block; }
+  .gkg-nav { flex-direction: column; margin: 0; padding-bottom: var(--space-2); }
+  .gkg-nav a { display: flex; width: 100%; font-size: 18px; }
+  .gkg-nav-login { display: block; }
+  .gkg-header-login { display: none; }
+  .gkg-menu-btn { display: inline-flex; }
+}
+@media (max-width: 520px) {
+  .gkg-logo span { display: none; }
+  .gkg-header .gkg-btn-wing { padding: 0 var(--space-3); font-size: 16px; }
+}

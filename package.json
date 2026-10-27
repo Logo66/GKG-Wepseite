@@ -4,7 +4,9 @@
   "private": true,
   "description": "Neue Website des Gleitschirmklubs Glarnerland (GKG)",
   "scripts": {
-    "previews": "node tools/render-previews.js"
+    "previews": "node tools/render-previews.js",
+    "prototype": "node tools/build-prototype.js",
+    "check": "node tools/build-prototype.js && node tools/check-prototype.js"
   },
   "devDependencies": {
     "playwright": "1.63.0",

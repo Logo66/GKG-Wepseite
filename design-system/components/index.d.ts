@@ -14,7 +14,7 @@ export declare function FlightStatus(props: FlightStatusProps): React.ReactEleme
 export interface WeatherCardProps { station: string; altitude?: string | number; status: Status; wind: number; gust: number; /** degrees the wind comes FROM */ direction: number; temperature: number; cloudBase?: string | number; updated?: string; source?: string }
 export declare function WeatherCard(props: WeatherCardProps): React.ReactElement;
 
-export interface SpotCardProps { name: string; region?: string; takeoff: string | number; landing: string | number; directions: ('N' | 'NO' | 'O' | 'SO' | 'S' | 'SW' | 'W' | 'NW')[]; level?: 'Einsteiger' | 'Fortgeschritten' | 'Profi'; status?: Status; href?: string; routeHref?: string }
+export interface SpotCardProps { name: string; region?: string; /** omitted values are left out, never guessed */ takeoff?: string | number; landing?: string | number; directions?: ('N' | 'NO' | 'O' | 'SO' | 'S' | 'SW' | 'W' | 'NW')[]; level?: 'Einsteiger' | 'Fortgeschritten' | 'Profi'; note?: string; status?: Status; /** e.g. 'Alpbetrieb' instead of the default word */ statusLabel?: string; href?: string; cta?: string; /** no routeHref = no Route button */ routeHref?: string }
 export declare function SpotCard(props: SpotCardProps): React.ReactElement;
 
 export interface SpotMarkerProps { label: string; status: Status; active?: boolean; onClick?: () => void }

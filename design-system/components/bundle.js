@@ -96,23 +96,27 @@
   }
 
   function SpotCard(p) {
+    var dirs = p.directions || [], facts = [];
+    if (p.takeoff != null) facts.push(['Start', p.takeoff + ' m ü. M.']);
+    if (p.landing != null) facts.push(['Landung', p.landing + ' m ü. M.']);
+    if (dirs.length) facts.push(['Wind', dirs.join(' · ')]);
+    if (p.level) facts.push(['Niveau', p.level, 'gkg-dd-text']);
     return h('article', { className: 'gkg-card' },
       h('div', { className: 'gkg-card-body' },
         h('div', { className: 'gkg-card-head' },
           h('div', null,
             h('h3', { className: 'gkg-title' }, p.name),
             p.region && h('p', { className: 'gkg-meta' }, p.region)),
-          p.status && h(FlightStatus, { status: p.status })),
-        h('div', { className: 'gkg-spot-top' },
-          h(WindRose, { directions: p.directions }),
-          h('dl', { className: 'gkg-facts' },
-            h('dt', null, 'Start'), h('dd', null, p.takeoff + ' m ü. M.'),
-            h('dt', null, 'Landung'), h('dd', null, p.landing + ' m ü. M.'),
-            h('dt', null, 'Wind'), h('dd', null, (p.directions || []).join(' · ')),
-            p.level && h(React.Fragment, null, h('dt', null, 'Niveau'), h('dd', { style: { fontFamily: 'var(--font-body)', fontWeight: 700 } }, p.level)))),
+          p.status && h(FlightStatus, { status: p.status, label: p.statusLabel })),
+        (facts.length > 0 || dirs.length > 0) && h('div', { className: 'gkg-spot-top' },
+          dirs.length > 0 && h(WindRose, { directions: dirs }),
+          facts.length > 0 && h('dl', { className: 'gkg-facts' }, facts.map(function (f) {
+            return h(React.Fragment, { key: f[0] }, h('dt', null, f[0]), h('dd', { className: f[2] }, f[1]));
+          }))),
+        p.note && h('p', { className: 'gkg-spot-note' }, p.note),
         h('div', { className: 'gkg-card-actions' },
-          h(Button, { variant: 'primary', href: p.href || '#' }, 'Details & Regeln'),
-          h(Button, { variant: 'quiet', href: p.routeHref || '#' }, 'Route'))));
+          h(Button, { variant: 'primary', href: p.href || '#' }, p.cta || 'Details & Regeln'),
+          p.routeHref && h(Button, { variant: 'quiet', href: p.routeHref }, 'Route'))));
   }
 
   /* ---------- SpotMarker ---------- */
@@ -256,15 +260,21 @@
   /* ---------- SiteHeader ---------- */
   function SiteHeader(p) {
     var items = p.items || [];
-    return h('header', { className: 'gkg-header' },
-      h('a', { className: 'gkg-logo', href: p.homeHref || '#' }, h('b', null, 'GKG'), h('span', null, p.clubName)),
-      h('nav', { 'aria-label': 'Hauptnavigation', style: { marginRight: 'auto' } },
-        h('ul', { className: 'gkg-nav' }, items.map(function (it) {
-          return h('li', { key: it.label }, h('a', { href: it.href || '#', 'aria-current': it.label === p.active ? 'page' : undefined }, it.label));
-        }))),
+    var st = React.useState(false), open = st[0], setOpen = st[1];
+    var navId = (React.useId ? React.useId() : 'gkg') + '-nav';
+    function close() { setOpen(false); }
+    return h('header', { className: cx('gkg-header', open && 'gkg-header-open') },
+      h('a', { className: 'gkg-logo', href: p.homeHref || '#', onClick: close }, h('b', null, 'GKG'), h('span', null, p.clubName)),
+      h('nav', { id: navId, className: 'gkg-nav-wrap', 'aria-label': 'Hauptnavigation' },
+        h('ul', { className: 'gkg-nav' },
+          items.map(function (it) {
+            return h('li', { key: it.label }, h('a', { href: it.href || '#', onClick: close, 'aria-current': it.label === p.active ? 'page' : undefined }, it.label));
+          }),
+          h('li', { className: 'gkg-nav-login' }, h('a', { href: p.loginHref || '#', onClick: close }, 'Login')))),
       h('div', { className: 'gkg-header-actions' },
-        h(Button, { variant: 'ghost', href: p.loginHref || '#' }, 'Login'),
-        h(Button, { variant: 'wing', href: p.ctaHref || '#' }, p.cta || 'Jahreskarte')));
+        h(Button, { variant: 'ghost', className: 'gkg-header-login', href: p.loginHref || '#' }, 'Login'),
+        h(Button, { variant: 'wing', href: p.ctaHref || '#', onClick: close }, p.cta || 'Jahreskarte'),
+        h('button', { type: 'button', className: 'gkg-menu-btn', 'aria-expanded': open, 'aria-controls': navId, onClick: function () { setOpen(!open); } }, open ? 'Schliessen' : 'Menü')));
   }
 
   var api = { SiteHeader: SiteHeader, Button: Button, FlightStatus: FlightStatus, WeatherCard: WeatherCard, SpotCard: SpotCard, SpotMarker: SpotMarker, BuyBox: BuyBox, PassCard: PassCard, ListingCard: ListingCard, ProductCard: ProductCard, DataTable: DataTable, StatTile: StatTile };

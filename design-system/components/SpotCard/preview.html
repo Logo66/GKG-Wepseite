@@ -8,8 +8,8 @@
 <script>
   var G = window.GKG, h = React.createElement;
   ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null,
-    h(G.SpotCard, { name: 'Musteralp', region: 'Glarus Nord', takeoff: "1'450", landing: '480', directions: ['S', 'SW', 'W'], level: 'Einsteiger', status: 'go' }),
-    h(G.SpotCard, { name: 'Beispielegg', region: 'Glarus Süd', takeoff: "1'900", landing: '650', directions: ['O', 'SO'], level: 'Fortgeschritten', status: 'stop' })));
+    h(G.SpotCard, { name: 'Musteralp', region: 'Glarus Nord', takeoff: "1'450", landing: '480', directions: ['S', 'SW', 'W'], level: 'Einsteiger', status: 'go', routeHref: '#' }),
+    h(G.SpotCard, { name: 'Beispielegg', region: 'Glarus Süd', takeoff: "1'900", landing: '650', directions: ['O', 'SO'], level: 'Fortgeschritten', status: 'stop', routeHref: '#' })));
 </script>
 </body>
 </html>

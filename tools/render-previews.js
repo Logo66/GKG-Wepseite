@@ -5,28 +5,15 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { buildTokensCss } = require('./tokens-css');
 
 const root = path.resolve(__dirname, '..');
 const ds = path.join(root, 'design-system');
 const out = path.join(root, 'build', 'previews');
 fs.mkdirSync(out, { recursive: true });
 
-const tok = JSON.parse(fs.readFileSync(path.join(ds, 'tokens.json'), 'utf8'));
-const themes = tok.color.themes.map(t => t.id);
-const val = (t, th) => (typeof t.value === 'string' ? t.value : (t.value[th] ?? t.value[themes[0]]));
-const alias = v => v.replace(/^\{(.+)\}$/, 'var(--$1)');
-
-let css = '';
-themes.forEach((th, i) => {
-  css += (i === 0 ? `:root, [data-theme="${th}"]` : `[data-theme="${th}"]`) + ' {\n';
-  tok.color.tokens.forEach(t => { css += `  --${t.name}: ${alias(val(t, th))};\n`; });
-  (tok.shadow?.tokens || []).forEach(t => { css += `  --${t.name}: ${val(t, th)};\n`; });
-  css += '}\n';
-});
-css += ':root {\n';
-['spacing', 'radius', 'size'].forEach(f => (tok[f]?.tokens || []).forEach(t => { css += `  --${t.name}: ${t.value};\n`; }));
-Object.entries(tok.type.families).forEach(([k, v]) => { css += `  --font-${k}: ${v};\n`; });
-css += '}\n';
+const themes = JSON.parse(fs.readFileSync(path.join(ds, 'tokens.json'), 'utf8')).color.themes.map(t => t.id);
+const css = buildTokensCss(path.join(ds, 'tokens.json'), 'attribute');
 const tokensCss = path.join(root, 'build', 'tokens.css');
 fs.writeFileSync(tokensCss, css);
 
