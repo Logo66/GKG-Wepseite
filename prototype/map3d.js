@@ -113,6 +113,32 @@ window.GKGMap = (function () {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  var COMPASS = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+  function compass(deg) { return COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8]; }
+
+  // Windstation: Pfeil zeigt, wohin der Wind weht; Zahl = Wind in km/h; Farbe = Lage (go/caution/stop)
+  function stationEl(st, onPick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pt-wx pt-wx-' + st.status + (st.live ? '' : ' is-sample');
+    var label = st.station + ': ' + (st.wind == null ? 'kein Wind gemessen' : st.wind + ' km/h') + (st.direction != null ? ' aus ' + compass(st.direction) : '') + ', ' + st.statusLabel;
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    if (st.direction != null) {
+      var arrow = document.createElement('span');
+      arrow.className = 'pt-wx-arrow';
+      arrow.style.transform = 'rotate(' + ((st.direction + 180) % 360) + 'deg)';
+      arrow.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l6 9h-4v9h-4v-9H6z"/></svg>';
+      b.appendChild(arrow);
+    }
+    var val = document.createElement('span');
+    val.className = 'pt-wx-val';
+    val.textContent = st.wind == null ? '–' : String(st.wind);
+    b.appendChild(val);
+    b.addEventListener('click', function (e) { e.stopPropagation(); onPick(st.id); });
+    return b;
+  }
+
   // Marker-Spitze genau auf der Koordinate: Tropfen ~48 px unter Oberkante, Landemarker in der Mitte
   function offsetFor(kind, active) {
     if (kind === 'landing') return [0, active ? -21 : -17];
@@ -157,7 +183,7 @@ window.GKGMap = (function () {
       function updateZoomClass() { container.classList.toggle('is-far', map.getZoom() < 11.2); }
       map.on('zoom', updateZoomClass);
 
-      var markers = {}, active = null, terrainOn = true;
+      var markers = {}, active = null, terrainOn = true, wx = [];
       sites.forEach(function (s) {
         var el = document.createElement('div');
         el.className = 'pt-mk' + (quiet[s.id] ? ' pt-mk-quiet' : '');
@@ -196,6 +222,14 @@ window.GKGMap = (function () {
           fly({ pitch: on ? PITCH : 0, bearing: on ? map.getBearing() : 0 });
         },
         isTerrain: function () { return terrainOn; },
+        setStations: function (list, onPick) {
+          wx.forEach(function (m) { m.remove(); });
+          wx = list.map(function (st) {
+            return new ml.Marker({ element: stationEl(st, onPick), anchor: 'center' }).setLngLat([st.lon, st.lat]).addTo(map);
+          });
+        },
+        showStations: function (on) { container.classList.toggle('hide-wx', !on); },
+        focusPoint: function (lat, lon) { fly({ center: [lon, lat], zoom: Math.max(map.getZoom(), 12.2), pitch: terrainOn ? PITCH : 0 }); },
         destroy: function () { map.remove(); }
       };
       function siteById(id) { return sites.filter(function (s) { return s.id === id; })[0]; }

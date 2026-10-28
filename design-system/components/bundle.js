@@ -52,7 +52,10 @@
   }
 
   /* ---------- WeatherCard ---------- */
+  function v(x) { return x == null || x === '' ? '–' : x; }
+
   function WeatherCard(p) {
+    var hasDir = p.direction != null;
     var to = ((p.direction || 0) + 180) % 360;
     return h('article', { className: 'gkg-card' },
       h('div', { className: 'gkg-card-body' },
@@ -60,26 +63,26 @@
           h('div', null,
             h('h3', { className: 'gkg-title' }, p.station),
             p.altitude != null && h('p', { className: 'gkg-meta gkg-data' }, p.altitude + ' m ü. M.')),
-          h(FlightStatus, { status: p.status })),
+          h(FlightStatus, { status: p.status, label: p.statusLabel })),
         h('div', { className: 'gkg-wx-grid' },
           h('div', null,
             h('div', { className: 'gkg-wx-lbl' }, 'Wind'),
             h('div', { className: 'gkg-wx-wind' },
-              h('span', { className: 'gkg-wx-arrow', title: 'Wind aus ' + compass(p.direction || 0) }, h('span', { style: { display: 'grid', transform: 'rotate(' + to + 'deg)' } }, Icon.arrow())),
-              h('div', { className: 'gkg-wx-val' }, p.wind, h('small', null, 'km/h'))),
-            h('div', { className: 'gkg-meta' }, 'aus ' + compass(p.direction || 0) + ' (' + p.direction + '°)')),
+              hasDir && h('span', { className: 'gkg-wx-arrow', title: 'Wind aus ' + compass(p.direction) }, h('span', { style: { display: 'grid', transform: 'rotate(' + to + 'deg)' } }, Icon.arrow())),
+              h('div', { className: 'gkg-wx-val' }, v(p.wind), h('small', null, 'km/h'))),
+            h('div', { className: 'gkg-meta' }, hasDir ? 'aus ' + compass(p.direction) + ' (' + Math.round(p.direction) + '°)' : 'Richtung –')),
           h('div', null,
             h('div', { className: 'gkg-wx-lbl' }, 'Böen'),
-            h('div', { className: 'gkg-wx-val' }, p.gust, h('small', null, 'km/h'))),
+            h('div', { className: 'gkg-wx-val' }, v(p.gust), h('small', null, 'km/h'))),
           h('div', null,
             h('div', { className: 'gkg-wx-lbl' }, 'Temperatur'),
-            h('div', { className: 'gkg-wx-val' }, p.temperature, h('small', null, '°C'))),
+            h('div', { className: 'gkg-wx-val' }, v(p.temperature), h('small', null, '°C'))),
           p.cloudBase != null && h('div', null,
             h('div', { className: 'gkg-wx-lbl' }, 'Basis'),
             h('div', { className: 'gkg-wx-val' }, p.cloudBase, h('small', null, 'm')))),
         h('div', { className: 'gkg-wx-foot' },
-          h('span', { className: 'gkg-pulse', 'aria-hidden': true }),
-          h('p', { className: 'gkg-meta' }, 'Live · ' + (p.updated || '') + (p.source ? ' · Quelle: ' + p.source : '')))));
+          p.live !== false && h('span', { className: 'gkg-pulse', 'aria-hidden': true }),
+          h('p', { className: 'gkg-meta' }, [p.live === false ? 'Beispielwerte' : 'Live', p.updated, p.source && 'Quelle: ' + p.source].filter(Boolean).join(' · ')))));
   }
 
   /* ---------- SpotCard ---------- */
@@ -236,16 +239,19 @@
   }
 
   /* ---------- DataTable ---------- */
+  // stack: auf schmalen Bildschirmen steht jede Zeile als Karte (Spaltenname vor jedem Wert).
+  // Die ARIA-Rollen halten die Tabelle für Screenreader lesbar, auch wenn CSS das Layout ändert.
   function DataTable(p) {
-    var cols = p.columns || [];
-    return h('div', { className: 'gkg-table-wrap' },
-      h('table', { className: 'gkg-table' },
+    var cols = p.columns || [], st = !!p.stack;
+    function role(r) { return st ? r : undefined; }
+    return h('div', { className: cx('gkg-table-wrap', st && 'gkg-table-stack') },
+      h('table', { className: 'gkg-table', role: role('table') },
         p.caption && h('caption', null, p.caption),
-        h('thead', null, h('tr', null, cols.map(function (c) { return h('th', { key: c.key, scope: 'col', className: c.align === 'right' ? 'num' : undefined }, c.label); }))),
-        h('tbody', null, (p.rows || []).map(function (r, i) {
-          return h('tr', { key: r.id || i }, cols.map(function (c) {
+        h('thead', { role: role('rowgroup') }, h('tr', { role: role('row') }, cols.map(function (c) { return h('th', { key: c.key, scope: 'col', role: role('columnheader'), className: c.align === 'right' ? 'num' : undefined }, c.label); }))),
+        h('tbody', { role: role('rowgroup') }, (p.rows || []).map(function (r, i) {
+          return h('tr', { key: r.id || i, role: role('row') }, cols.map(function (c) {
             var v = c.render ? c.render(r) : r[c.key];
-            return h('td', { key: c.key, className: c.align === 'right' ? 'num' : undefined }, v);
+            return h('td', { key: c.key, role: role('cell'), 'data-label': st ? c.label : undefined, className: c.align === 'right' ? 'num' : undefined }, v);
           }));
         }))));
   }

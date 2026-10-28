@@ -1,6 +1,7 @@
 // Inhalte des Prototyps.
 // Gebietstexte: aus gkg.ch übernommen (Suchindex, Stand 2025) – vor dem Go-Live mit dem Ressort Fluggebiete prüfen.
-// Alles mit "example: true" bzw. in den Listen "weather", "notices", "products", "listings" ist Beispiel.
+// Alles mit "example: true" bzw. in den Listen "notices", "products", "listings" ist Beispiel.
+// Wind kommt aus stations.js (flightbuddyki.ch), Mitglieder und Buchhaltung aus store.js.
 window.GKG_DATA = {
   season: 2027,
   price: 40,
@@ -87,7 +88,7 @@ window.GKG_DATA = {
     { id: 'rufi', kind: 'landing', name: 'Landeplatz Rufi', areas: ['huesliberg', 'altwis', 'oberebogmen', 'hirzli'], lat: 47.1834, lon: 9.0472, alt: 428, src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf', note: 'Sammelpunkt für das Taxi zum Hüsliberg.' },
     { id: 'altwis', kind: 'start', name: 'Altwis', areas: ['altwis'], lat: 47.2107, lon: 9.0679, alt: 1055, dirs: ['W', 'NW', 'N'], level: 'leicht', src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf' },
     { id: 'bogmen', kind: 'start', name: 'Obere Bogmen', areas: ['oberebogmen'], lat: 47.1863, lon: 9.0942, alt: 1432, dirs: ['S', 'SW', 'W'], src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf', check: true, note: 'Nur im markierten Bereich starten. Startrichtung mit dem Ressort abgleichen – das grobe Höhenmodell zeigt hier einen Nordwesthang.' },
-    { id: 'hirzli', kind: 'start', name: 'Hirzli', areas: ['hirzli'], lat: 47.13378, lon: 9.00727, alt: 1640, dirs: ['N', 'NO', 'NW'], src: 'Paragliding365 (Stand 2016)', srcUrl: 'https://www.paragliding365.com/index-p-flightarea_details_200.html', check: true, note: 'Position eher ungenau: Das Höhenmodell liegt hier rund 50 m tiefer als angegeben.' },
+    { id: 'hirzli', kind: 'start', name: 'Hirzli', areas: ['hirzli'], lat: 47.13378, lon: 9.00727, alt: 1640, dirs: ['W', 'NW', 'N'], level: 'mittel', src: 'SHV-Infotafel Schänis (Richtung, Schwierigkeit), Position: Paragliding365 (Stand 2016)', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf', check: true, note: 'Position eher ungenau: Das Höhenmodell liegt hier rund 50 m tiefer als angegeben. Während der Jagdzeit gesperrt (laut Paragliding365).' },
     { id: 'kiosk', kind: 'start', name: 'Kiosk', areas: ['braunwald'], lat: 46.9385, lon: 8.9980, alt: 1242, dirs: ['O', 'SO'], src: 'SHV-Infotafel Braunwald, braunwald.ch', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf' },
     { id: 'gumen', kind: 'start', name: 'Gumen (Winter)', areas: ['braunwald'], lat: 46.9551, lon: 8.9843, alt: 1875, dirs: ['SO', 'S', 'SW'], src: 'SHV-Infotafel Braunwald', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf', note: 'Winterstartplatz unterhalb der Bergstation Gumen; nur im markierten Bereich starten.' },
     { id: 'gumengrat', kind: 'start', name: 'Gumengrat', areas: ['braunwald'], lat: 46.9600, lon: 8.98721, alt: 2064, dirs: ['S'], src: 'braunwald.ch, SHV-Infotafel Braunwald', srcUrl: 'https://braunwald.ch/de/map/detail/gleitschirm-startplatz-gumengrat-nur-sommer-e9ede009-5616-4d91-825a-35c421c93eed.html', note: 'Nur im Sommer.' },
@@ -96,12 +97,42 @@ window.GKG_DATA = {
     { id: 'elm-lp', kind: 'landing', name: 'Landeplatz Elm', areas: ['elm'], lat: 46.91274, lon: 9.16283, alt: 1019, src: 'DHV-Geländedatenbank', srcUrl: 'https://service.dhv.de/db2/details.php?qi=glp_details&item=1290', check: true }
   ],
 
-  // Beispiele – im echten Betrieb aus den Messstationen
-  weather: [
-    { station: 'Obere Bogmen · Klubstation', status: 'go', wind: 14, gust: 22, direction: 240, temperature: 8, updated: 'vor 3 Min.', source: 'Beispiel' },
-    { station: 'Braunwald', status: 'go', wind: 9, gust: 15, direction: 160, temperature: 6, updated: 'vor 6 Min.', source: 'Beispiel' },
-    { station: 'Mollis · Landeplatz', status: 'caution', wind: 18, gust: 31, direction: 200, temperature: 14, updated: 'vor 2 Min.', source: 'Beispiel' }
-  ],
+  // SHV-Infotafeln: welche Plätze auf welcher Tafel stehen und was dort gilt (Auszug).
+  // Massgebend ist immer die aktuelle Tafel des SHV – im Live-Betrieb holt das GKG-Backend
+  // die PDFs regelmässig von shv-fsvl.ch und zeigt eine Vorschau (tools/fetch-shv.py).
+  shv: {
+    mollis: {
+      title: 'SHV-Infotafel Mollis', url: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf',
+      sites: ['froni', 'froni-winter', 'kerenzer', 'mollis-lp'],
+      rules: [
+        'Flugplatz Mollis: die Piste und ihre Verlängerungslinien nicht überfliegen.',
+        'Im rot umrandeten Bereich nicht unter 1047 m ü. M. fliegen.',
+        'Im blauen Bereich höchstens bis 900 m ü. M. fliegen.'
+      ],
+      note: 'Laut SHV nach einem Bericht über Hike & Fly im Kanton Glarus aktualisiert.'
+    },
+    schaenis: {
+      title: 'SHV-Infotafel Schänis', url: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf',
+      sites: ['huesliberg', 'altwis', 'bogmen', 'hirzli', 'rufi'],
+      rules: [
+        'Bei Föhn allgemein kein Flugbetrieb; bei Bise wird das Fluggebiet Hüsliberg überspült.',
+        'Startverbote während Alp- und Brutzeiten sowie an Karfreitag, Ostersonntag und Pfingstsonntag – Daten gemäss Tafel.',
+        'Landeplatz Rufi ganzjährig offen, ausser an diesen Feiertagen. Die Strasse westlich des Landeplatzes nicht überfliegen.',
+        'Im violett markierten Bereich nicht unter 1030 m ü. M. fliegen; den Segelflugbetrieb Schänis nicht stören.',
+        'Bogmen: nur im definierten Bereich starten.'
+      ]
+    },
+    braunwald: {
+      title: 'SHV-Infotafel Braunwald', url: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf',
+      sites: ['kiosk', 'gumen', 'gumengrat', 'rueti'],
+      rules: [
+        'Landeplatz Rüti: bei Talwind Rechtsvolte, bei Bergwind Linksvolte. Zugang ab Linthal ca. 10 Min. entlang der Linth talauswärts; ganzjährig aktiv.',
+        'Gumengrat: höchstens zwei bis drei Starts gleichzeitig. Sensible Alpweide – nur im markierten, abgesperrten Bereich starten und nur mit Windsack.',
+        'Gumen Winter: nur im markierten Bereich starten.',
+        'Die Karte der Tafel zeigt Kabel, Bergbahnen sowie Jagdbann- und Schutzgebiete mit Start- und Landeverbot.'
+      ]
+    }
+  },
 
   // Beispiele – im echten Betrieb vom Ressort Fluggebiete erfasst
   notices: [

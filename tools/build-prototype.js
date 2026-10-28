@@ -4,6 +4,7 @@
 //   ds/                Tokens (folgen der Systemeinstellung hell/dunkel) und die Komponenten aus design-system/
 //   tiles/             Relief- und Höhenkacheln aus build/tiles/ (tools/build-tiles.py)
 //   vendor/            Stylesheet von MapLibre (das Skript lädt die Karte selbst von unpkg)
+//   shv/               Vorschaubilder der SHV-Infotafeln, falls tools/fetch-shv.py sie erzeugt hat
 const fs = require('fs');
 const path = require('path');
 const { buildTokensCss } = require('./tokens-css');
@@ -14,7 +15,20 @@ const out = path.join(root, 'build', 'prototype');
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'ds'), { recursive: true });
 
-for (const f of ['app.js', 'app.css', 'data.js', 'map3d.js']) fs.copyFileSync(path.join(src, f), path.join(out, f));
+for (const f of ['app.js', 'app.css', 'data.js', 'ui.js', 'stations.js', 'map3d.js', 'store.js', 'admin.js', 'member.js']) fs.copyFileSync(path.join(src, f), path.join(out, f));
+
+// Vorschaubilder der SHV-Infotafeln (tools/fetch-shv.py) – nur, wenn sie gebaut und freigegeben sind
+const shv = path.join(root, 'build', 'shv');
+const previews = {};
+const shvFiles = fs.existsSync(shv) ? fs.readdirSync(shv).filter(n => n.endsWith('.webp')) : [];
+if (shvFiles.length) {
+  fs.mkdirSync(path.join(out, 'shv'), { recursive: true });
+  for (const f of shvFiles) {
+    fs.copyFileSync(path.join(shv, f), path.join(out, 'shv', f));
+    previews[f.replace(/\.webp$/, '')] = 'shv/' + f;
+  }
+}
+fs.writeFileSync(path.join(out, 'shv-previews.js'), '// Erzeugt von tools/build-prototype.js\nwindow.GKG_SHV_PREVIEW = ' + JSON.stringify(previews) + ';\n');
 for (const f of ['map-poster.jpg', 'map-poster-dark.jpg']) if (fs.existsSync(path.join(src, f))) fs.copyFileSync(path.join(src, f), path.join(out, f));
 fs.mkdirSync(path.join(out, 'ds', 'logos'), { recursive: true });
 for (const f of ['gkg-signet.png', 'gkg-sonne-bogen.png', 'gkg-sonne-text.png']) fs.copyFileSync(path.join(root, 'design-system', 'assets', 'Logos', f), path.join(out, 'ds', 'logos', f));

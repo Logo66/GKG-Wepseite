@@ -11,7 +11,7 @@ export declare function Button(props: ButtonProps): React.ReactElement;
 export interface FlightStatusProps { status: Status; label?: string }
 export declare function FlightStatus(props: FlightStatusProps): React.ReactElement;
 
-export interface WeatherCardProps { station: string; altitude?: string | number; status: Status; wind: number; gust: number; /** degrees the wind comes FROM */ direction: number; temperature: number; cloudBase?: string | number; updated?: string; source?: string }
+export interface WeatherCardProps { station: string; altitude?: string | number; status: Status; statusLabel?: string; /** missing values show as «–» */ wind?: number | null; gust?: number | null; /** degrees the wind comes FROM; null hides the arrow */ direction?: number | null; temperature?: number | null; cloudBase?: string | number; updated?: string; source?: string; /** false = sample values: no pulse, labelled «Beispielwerte» instead of «Live» */ live?: boolean }
 export declare function WeatherCard(props: WeatherCardProps): React.ReactElement;
 
 export interface SpotCardProps { name: string; region?: string; /** omitted values are left out, never guessed */ takeoff?: string | number; landing?: string | number; directions?: ('N' | 'NO' | 'O' | 'SO' | 'S' | 'SW' | 'W' | 'NW')[]; level?: 'Einsteiger' | 'Fortgeschritten' | 'Profi'; note?: string; status?: Status; /** e.g. 'Alpbetrieb' instead of the default word */ statusLabel?: string; href?: string; cta?: string; /** no routeHref = no Route button */ routeHref?: string }
@@ -33,7 +33,7 @@ export interface ProductCardProps { name: string; price: number; line?: string; 
 export declare function ProductCard(props: ProductCardProps): React.ReactElement;
 
 export interface DataTableColumn<R> { key: string; label: string; align?: 'left' | 'right'; render?: (row: R) => React.ReactNode }
-export interface DataTableProps<R = Record<string, unknown>> { columns: DataTableColumn<R>[]; rows: R[]; caption?: string }
+export interface DataTableProps<R = Record<string, unknown>> { columns: DataTableColumn<R>[]; rows: R[]; caption?: string; /** below 600px every row becomes a card with the column name before each value */ stack?: boolean }
 export declare function DataTable<R>(props: DataTableProps<R>): React.ReactElement;
 export declare namespace DataTable { function Role(props: { children: React.ReactNode }): React.ReactElement }
 

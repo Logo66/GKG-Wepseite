@@ -7,8 +7,8 @@ Neuaufbau von [gkg.ch](https://www.gkg.ch/) für den **Gleitschirmklub Glarnerla
 | | |
 | --- | --- |
 | Phase | 1 – Design und Prototyp. Noch kein Code der eigentlichen Website. |
-| Fertig | Design-System mit Klub-Logos, Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) mit 3D-Karte der 15 Start- und Landeplätze |
-| Als Nächstes | Koordinaten mit dem Ressort Fluggebiete bestätigen, Palette ans Logo-Gelb anpassen (Entscheid offen), Prototyp mit dem Vorstand testen, Logo als Vektordatei |
+| Fertig | Design-System in den Logo-Farben (Sonnen-Gelb, Türkis), Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) mit 3D-Karte der 15 Start- und Landeplätze, Windstationen von flightbuddyki.ch, Pop-up mit SHV-Infotafel, Verwaltung mit Buchhaltung und Ressort-Rechten, «Mein GKG» für die Mitglieder |
+| Als Nächstes | Koordinaten und SHV-Auszüge mit dem Ressort Fluggebiete bestätigen, Weg für die Wetterdaten wählen (GKG-Backend oder Freigabe auf dem BuddyServer), Rechte-Matrix und Kontenplan mit Vorstand und Kasse durchgehen, Prototyp mit dem Vorstand testen, Logo als Vektordatei |
 
 Den vollständigen Plan mit Zeitplan und offenen Fragen findest du in [design-system/Projektplan.md](design-system/Projektplan.md), den technischen Vorschlag in [design-system/Technik.md](design-system/Technik.md).
 
@@ -88,3 +88,5 @@ Der Ordner `design-system/` entspricht dem Ordner `project/` im Artifact. **Dies
 - Die Inhalte von gkg.ch stammen aus dem Suchindex, weil die Seite aus der Arbeitsumgebung nicht direkt erreichbar war. Bilder, Logo, Statuten, Vorstand und Kalender fehlen noch.
 - Die Vermutung, dass gkg.ch auf ClubDesk läuft, beruht nur auf dem Adressmuster der Seiten.
 - Angaben zu Anbietern, Gebühren, Wetterdaten und zur FlyCard Bassano sind ungeprüft und in den Dokumenten mit «prüfen» bzw. als Vermutung markiert.
+- **Dieses Repository ist öffentlich.** Hier gehören nie echte Mitgliederdaten hinein – auch nicht als Test. Alle Personen in `prototype/store.js` sind erfunden.
+- flightbuddyki.ch und die SHV-PDFs waren aus der Arbeitsumgebung nicht erreichbar. Die Abfrage der Stationen ist nach der Schnittstelle des BuddyServers gebaut und mit Testdaten geprüft, aber noch nie gegen den echten Dienst gelaufen.

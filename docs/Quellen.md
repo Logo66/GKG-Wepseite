@@ -48,6 +48,16 @@ Koordinaten und Höhen der 15 Plätze in `prototype/data.js`. Jeder Punkt ist ge
 - [DHV-Geländedatenbank – Hüsliberg](https://service.dhv.de/db2/details.php?qi=glp_details&item=1474), [Braunwald](https://service.dhv.de/db2/details.php?qi=glp_details&item=1477), [Elm](https://service.dhv.de/db2/details.php?qi=glp_details&item=1290)
 - [Paragliding365 – Hirzli](https://www.paragliding365.com/index-p-flightarea_details_200.html) (Stand 2016), [Elm – Schabell/Ämpächli](https://www.paragliding365.com/index-p-flightarea_details_215.html), [Hüsliberg](https://www.paragliding365.com/index-p-flightarea_details_3040.html), [Kerenzerberg](https://www.paragliding365.com/index-p-flightarea_details_204.html)
 
+## SHV-Infotafeln (Pop-up)
+
+Die Auszüge in `prototype/data.js` (`shv`) stammen aus Suchmaschinen-Auszügen der drei PDFs oben; die PDFs selbst waren aus der Arbeitsumgebung nicht erreichbar. Vor dem Go-Live mit den aktuellen Tafeln abgleichen. Vorschaubilder nur nach Rücksprache mit dem SHV.
+
+## Wetter
+
+- [flightbuddyki.ch](https://flightbuddyki.ch) – BuddyServer, Endpunkt `/api/v1/weather/stations` mit den Quellen FANET (WindBuddy), Holfuy und SwissMetNet. Schnittstelle aus dem Quellcode des BuddyServers übernommen, nicht gegen den laufenden Dienst getestet.
+- [MeteoSchweiz](https://www.meteoschweiz.admin.ch) – Messnetz SwissMetNet; Angabe «Quelle: MeteoSchweiz» Pflicht.
+- [Holfuy](https://holfuy.com) – Nutzung der Werte auf gkg.ch klären.
+
 ## Karte
 
 - Höhendaten: [Terrain Tiles auf AWS Open Data](https://registry.opendata.aws/terrain-tiles/) (Mapzen/Tilezen; in Europa u. a. EU-DEM, © Copernicus)

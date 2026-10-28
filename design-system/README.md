@@ -1,4 +1,4 @@
-GKG ist der Auftritt des Gleitschirmklubs Glarnerland im Netz – seit 1987 einer der grössten Gleitschirmklubs der Ostschweiz: frisch, klar und luftig – so, dass junge Pilotinnen und Piloten neugierig werden und langjährige Mitglieder sich sofort zurechtfinden. Die Marke lebt von drei Dingen, die jeder vom Startplatz kennt: das Gletscherseegrün der Glarner Bergseen (`sky`), das Orange eines Schirms vor dem Himmel (`wing`) und die Limette, die man sich als Thermik-Blase vorstellt (`thermik`).
+GKG ist der Auftritt des Gleitschirmklubs Glarnerland im Netz – seit 1987 einer der grössten Gleitschirmklubs der Ostschweiz: frisch, klar und luftig – so, dass junge Pilotinnen und Piloten neugierig werden und langjährige Mitglieder sich sofort zurechtfinden. Die Marke lebt von den Farben ihrer Logos: dem Gletscherseegrün der Glarner Bergseen (`sky`), dem Sonnen-Gelb des Sonnen-Logos (`wing`) und dem Türkis von www.gkg.ch (`thermik`), dazu dem Anthrazit des G-Signets (`ink`).
 
 ## Haltung
 
@@ -20,8 +20,8 @@ GKG ist der Auftritt des Gleitschirmklubs Glarnerland im Netz – seit 1987 eine
 - Seiten stehen auf `surface`; Karten auf `surface-raised` mit `line` als Haarlinie und `shadow-sm`. Die Karte (Map) und Eingabefelder liegen auf `surface-sunken`.
 - Text ist `ink`, Nebentext `ink-muted`. Beide erreichen auf allen drei surface-Tönen in beiden Themes mindestens 5.9:1.
 - `sky` ist die Primärfarbe: Primär-Buttons (Text `on-sky`), Links (`link`, immer unterstrichen), aktive Navigation (`sky-soft`).
-- `wing` (Orange) ist **reserviert fürs Kaufen und Hervorheben**: der Jahreskarten-Button, «Jetzt bezahlen» im Shop-Warenkorb, ein ausgewählter Karten-Marker. Text darauf ist immer `on-wing` (dunkel). Orange als Textfarbe nur als `wing-ink` (Preise).
-- `thermik` (Limette) nur als kleine Fläche mit `on-thermik`: Badge «Neu», Live-Puls. Nie als Text, nie als grosse Fläche.
+- `wing` (Sonnen-Gelb aus dem Logo) ist **reserviert fürs Kaufen und Hervorheben**: der Jahreskarten-Button, «Jetzt bezahlen», ein ausgewählter Karten-Marker. Text darauf ist immer `on-wing` (dunkel), im hellen Theme mit Rand `wing-edge`. Gelb als Textfarbe nur als `wing-ink` (im hellen Theme dunkles Gold, z. B. Preise).
+- `thermik` (Türkis aus www.gkg.ch) nur als kleine Fläche mit `on-thermik`: Badge «Neu», Live-Puls. Nie als Text, nie als grosse Fläche.
 - Flugbarkeit: `go` / `caution` / `stop` auf ihren `-soft`-Flächen – **immer mit Wort und Icon** (Häkchen, Ausrufezeichen, Kreuz), damit auch Farbsehschwache sicher lesen.
 - QR-Codes stehen in beiden Themes auf `qr-ground` mit `qr-ink`.
 - Das dunkle Theme ist vollwertig (Nachtmodus für Abendrecherche, Wallet im Dunkeln) und folgt der Systemeinstellung.
@@ -65,7 +65,7 @@ GKG ist der Auftritt des Gleitschirmklubs Glarnerland im Netz – seit 1987 eine
 - Der Klub hat zwei Logos (Asset-Gruppe «Logos»): das **G-Signet** in Gelb `#ebc53b` und Anthrazit `#201f1f` und die **Sonne aus sieben Gleitschirmen** in Gelb `#ffd900` und Schwarz, mit www.gkg.ch in Türkis `#27cfcf`.
 - Das Signet steht in der Kopfzeile und im Wallet-Pass, immer auf der weissen Scheibe `logo-ground`, neben der Wortmarke «GKG» in `display`. Das Sonnen-Logo trägt die Startseite und die Fusszeile, ebenfalls auf `logo-ground`.
 - Nie nachzeichnen, umfärben oder verzerren. Die Logos liegen nur als Rasterbilder vor; für Druck und Stickerei der Klub-Kollektion braucht es Vektordateien.
-- Offen: Ob die Palette näher an das Logo-Gelb rückt, entscheidet der Vorstand. Bis dahin bleibt `sky` die Primärfarbe; das Türkis von www.gkg.ch liegt bereits nahe daran.
+- Die Palette folgt den Logos: `wing` ist das Sonnen-Gelb, `thermik` das Türkis von www.gkg.ch, `ink` liegt nahe am Anthrazit des Signets. `sky` bleibt die Primärfarbe für Bedienung und Links.
 
 ## Bewegung
 

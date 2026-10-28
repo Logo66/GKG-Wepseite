@@ -13,7 +13,7 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .gkg-btn-lg { min-height: var(--control-height-lg); padding: 0 var(--space-8); font-size: 19px; }
 .gkg-btn-primary { background: var(--sky); color: var(--on-sky); }
-.gkg-btn-wing { background: var(--wing); color: var(--on-wing); }
+.gkg-btn-wing { background: var(--wing); border-color: var(--wing-edge); color: var(--on-wing); }
 .gkg-btn-quiet { background: var(--surface-raised); color: var(--ink); border-color: var(--line-strong); }
 .gkg-btn-ghost { background: transparent; color: var(--sky); }
 .gkg-btn-ghost:hover, .gkg-btn-quiet:hover { background: var(--sky-soft); }
@@ -146,6 +146,17 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-table tbody tr:hover { background: var(--sky-soft); }
 .gkg-table .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .gkg-table th.num { font-family: var(--font-body); }
+@media (max-width: 599px) {
+  .gkg-table-stack { overflow: visible; }
+  .gkg-table-stack .gkg-table, .gkg-table-stack tbody, .gkg-table-stack tr, .gkg-table-stack td { display: block; width: 100%; box-sizing: border-box; }
+  .gkg-table-stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .gkg-table-stack tr { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); }
+  .gkg-table-stack tr:last-child { border-bottom: 0; }
+  .gkg-table-stack td { display: grid; grid-template-columns: minmax(88px, 34%) minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-1) 0; border: 0; text-align: left; overflow-wrap: anywhere; }
+  .gkg-table-stack td::before { content: attr(data-label); font: 700 13px/20px var(--font-body); color: var(--ink-muted); }
+  .gkg-table-stack td.num { text-align: left; }
+  .gkg-table-stack tbody tr:hover { background: none; }
+}
 .gkg-role { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-sm); background: var(--surface-sunken); border: 1px solid var(--line); font: 700 13px/24px var(--font-body); color: var(--ink); white-space: nowrap; }
 .gkg-role::before { content: ""; width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--sky); }
 

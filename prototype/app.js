@@ -11,16 +11,9 @@
     { label: 'Shop', href: '#shop' }
   ];
 
-  function chf(n) {
-    var s = Number(n).toFixed(2).split('.');
-    return s[0].replace(/\B(?=(\d{3})+(?!\d))/g, '’') + '.' + s[1];
-  }
-  function initials(name) {
-    return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
-  }
-  function go(name) { location.hash = name; }
+  var UI = window.GKGUI, S = window.GKGStore, WX = window.GKGStations;
+  var chf = UI.chf, go = UI.go, ext = UI.ext, Wrap = UI.Wrap, PageHead = UI.PageHead, Section = UI.Section, Block = UI.Block, Avatar = UI.Avatar, Dialog = UI.Dialog;
   function areaById(id) { return D.areas.filter(function (a) { return a.id === id; })[0]; }
-  function ext(href, text) { return h('a', { href: href, target: '_blank', rel: 'noopener' }, text); }
 
   function currentRoute() { return (location.hash || '').replace(/^#/, '') || 'start'; }
   function activeLabel(route) {
@@ -29,38 +22,29 @@
     return hit ? hit.label : null;
   }
 
-  /* ---------- building blocks ---------- */
-  function Wrap(p) { return h('div', { className: 'pt-wrap' }, p.children); }
-
-  function PageHead(p) {
-    return h('header', { className: 'pt-page-head' }, h(Wrap, null,
-      p.crumb && h('p', { className: 'pt-crumb' }, p.crumb),
-      p.eyebrow && h('p', { className: 'pt-eyebrow' }, p.eyebrow),
-      h('h1', { className: 'pt-h1' }, p.title),
-      p.lead && h('p', { className: 'pt-lead' }, p.lead),
-      p.children));
+  // Wetterstationen von flightbuddyki.ch (oder klar markierte Beispielwerte, siehe stations.js)
+  function useStations() {
+    var s = useState(null), data = s[0], setData = s[1];
+    useEffect(function () { var off = WX.subscribe(setData); WX.load(); return off; }, []);
+    return data;
   }
-
-  function Section(p) {
-    return h('section', { className: 'pt-section', id: p.id, 'aria-labelledby': p.id ? p.id + '-t' : undefined }, h(Wrap, null,
-      (p.title || p.aside) && h('div', { className: 'pt-section-head' },
-        h('div', null,
-          p.title && h('h2', { className: 'pt-h2', id: p.id ? p.id + '-t' : undefined }, p.title),
-          p.sub && h('p', { className: 'pt-muted' }, p.sub)),
-        p.aside),
-      p.children));
+  function km(a, b) {
+    var dx = (a.lon - b.lon) * 111.32 * Math.cos(a.lat * Math.PI / 180), dy = (a.lat - b.lat) * 110.54;
+    return Math.sqrt(dx * dx + dy * dy);
   }
-
-  function Block(p) {
-    if (!p.items || !p.items.length) return null;
-    return h('div', { className: 'pt-block' + (p.warn ? ' pt-block-warn' : '') },
-      h('h2', null, p.title),
-      h('ul', null, p.items.map(function (t, i) { return h('li', { key: i }, t); })));
+  // Nächste Station im Umkreis von 6 km – weiter weg sagt der Wind wenig über den Platz
+  function stationNear(wx, site) {
+    if (!wx || !wx.stations.length) return null;
+    var st = WX.nearest(wx.stations, site.lat, site.lon);
+    var d = km(st, site);
+    return d <= 6 ? { station: st, km: d } : null;
   }
-
-  function Avatar(p) {
-    return h('div', { className: 'pt-avatar' + (p.large ? ' pt-avatar-lg' : ''), 'aria-hidden': p.photo ? undefined : true },
-      p.photo ? h('img', { src: p.photo, alt: 'Foto ' + p.name }) : initials(p.name));
+  function StationNote(p) {
+    var wx = p.wx;
+    if (!wx || wx.live) return null;
+    return h('p', { className: 'pt-wx-note', role: 'note' },
+      h('b', null, 'Beispielwerte. '),
+      'flightbuddyki.ch ist von hier aus ' + (wx.reason || 'nicht erreichbar') + ' – die Live-Werte erscheinen, sobald der Klub-Server die Daten weitergibt.');
   }
 
   function HeroArt() {
@@ -111,8 +95,11 @@
             h(G.Button, { variant: 'quiet', size: 'lg', href: '#fluggebiete' }, 'Fluggebiete ansehen'))),
         h('div', { className: 'pt-hero-art', 'aria-hidden': true }, h(HeroArt))))),
 
-      h(Section, { id: 'jetzt', title: 'Jetzt am Startplatz', sub: 'Beispielwerte – im echten Betrieb live von den Messstationen.', aside: h('a', { href: '#wetter', className: 'pt-small' }, 'Alle Stationen') },
-        h('div', { className: 'pt-grid' }, D.weather.slice(0, 2).map(function (w) { return h(G.WeatherCard, Object.assign({ key: w.station }, w)); }))),
+      h(Section, { id: 'jetzt', title: 'Jetzt am Startplatz', sub: 'Wind der Stationen in den Fluggebieten – von flightbuddyki.ch.', aside: h('a', { href: '#wetter', className: 'pt-small' }, 'Alle Stationen') },
+        h(StationNote, { wx: p.wx }),
+        p.wx
+          ? h('div', { className: 'pt-grid' }, p.wx.stations.slice().sort(function (a, b) { return (a.ageS || 0) - (b.ageS || 0); }).slice(0, 3).map(function (w) { return h(G.WeatherCard, Object.assign({ key: w.id }, w)); }))
+          : h('p', { className: 'pt-muted', role: 'status' }, 'Stationen werden geladen …')),
 
       h(Section, { id: 'meldungen', title: 'Gebietsmeldungen', sub: 'Sperrungen und Hinweise, gepflegt vom Ressort Fluggebiete.' },
         h(NoticeList, { items: D.notices })),
@@ -191,17 +178,20 @@
     }));
   }
 
-  // Die 3D-Karte: lädt MapLibre erst hier, zeigt bis dahin ein Standbild bzw. bei Fehlern das Schema
+  // Die 3D-Karte: lädt MapLibre erst hier, zeigt bis dahin ein Standbild bzw. bei Fehlern das Schema.
+  // Mit p.wx erscheinen die Windstationen als Pfeile; p.onStation(id) meldet einen Tipp darauf.
   function Map3D(p) {
-    var ref = React.useRef(null), apiRef = React.useRef(null);
+    var ref = React.useRef(null), apiRef = React.useRef(null), cb = React.useRef(p);
+    cb.current = p;
     var st = useState('loading'), state = st[0], setState = st[1];
     var er = useState(''), err = er[0], setErr = er[1];
     var tr = useState(true), terrain = tr[0], setTerrain = tr[1];
+    var wo = useState(!p.compact), wxOn = wo[0], setWxOn = wo[1];
     useEffect(function () {
       var alive = true;
       window.GKGMap.create(ref.current, {
         sites: D.sites, focusArea: p.focusArea,
-        renderMarker: function (el, site, active) { renderMarker(el, site, active, p.onSelect); }
+        renderMarker: function (el, site, active) { renderMarker(el, site, active, function (id) { cb.current.onSelect(id); }); }
       }).then(function (api) {
         if (!alive) { api.destroy(); return; }
         apiRef.current = api;
@@ -216,6 +206,11 @@
       };
     }, []);
     useEffect(function () { if (state === 'ready' && p.selected) apiRef.current.select(p.selected); }, [p.selected, state]);
+    useEffect(function () {
+      if (state !== 'ready' || !p.wx) return;
+      apiRef.current.setStations(p.wx.stations, function (id) { if (cb.current.onStation) cb.current.onStation(id); });
+    }, [p.wx, state]);
+    useEffect(function () { if (state === 'ready') apiRef.current.showStations(wxOn); }, [wxOn, state]);
     function toggle() { var on = !terrain; setTerrain(on); apiRef.current.setTerrain(on); }
     return h('div', { className: 'pt-map3d-shell' + (p.compact ? ' is-compact' : '') },
       h('div', { className: 'pt-map3d', ref: ref, role: 'region', 'aria-label': p.label || '3D-Karte der Start- und Landeplätze' }),
@@ -230,20 +225,85 @@
               h(AreaMap, { selected: p.focusArea, onSelect: function (id) { go('gebiet-' + id); } }))),
       state === 'ready' && h('div', { className: 'pt-map3d-tools' },
         h(G.Button, { variant: 'quiet', onClick: toggle, 'aria-pressed': terrain }, terrain ? '2D-Ansicht' : '3D-Ansicht'),
+        p.wx && h(G.Button, { variant: 'quiet', onClick: function () { setWxOn(!wxOn); }, 'aria-pressed': wxOn }, wxOn ? 'Wind ausblenden' : 'Wind zeigen'),
         !p.compact && h(G.Button, { variant: 'quiet', onClick: function () { apiRef.current.overview(); if (p.onOverview) p.onOverview(); } }, 'Übersicht')));
   }
 
   function SiteFacts(p) {
     var x = p.site;
     return h('dl', { className: 'pt-sitefacts' },
+      h('dt', null, x.kind === 'start' ? 'Starthöhe' : 'Höhe'), h('dd', null, fmtAlt(x.alt) + ' m ü. M.'),
+      x.kind === 'start' && h(Fragment, null, h('dt', null, 'Startrichtung'), h('dd', null, x.dirs.length ? x.dirs.join(', ') : 'nicht angegeben')),
+      x.level && h(Fragment, null, h('dt', null, 'Schwierigkeit'), h('dd', { className: 'pt-dd-text' }, x.level)),
       h('dt', null, 'Koordinaten'), h('dd', null, x.lat.toFixed(5) + ' N, ' + x.lon.toFixed(5) + ' O'),
       h('dt', null, 'LV95'), h('dd', null, lv95(x)),
       h('dt', null, 'Quelle'), h('dd', { className: 'pt-dd-text' }, x.srcUrl ? ext(x.srcUrl, x.src) : x.src),
       x.check && h(Fragment, null, h('dt', null, 'Stand'), h('dd', { className: 'pt-dd-text' }, h(G.FlightStatus, { status: 'caution', label: 'Vom Ressort zu bestätigen' }))));
   }
 
+  function shvFor(site) {
+    var id = Object.keys(D.shv).filter(function (k) { return D.shv[k].sites.indexOf(site.id) >= 0; })[0];
+    return id ? Object.assign({ id: id }, D.shv[id]) : null;
+  }
+  function windText(st) {
+    var parts = [st.wind == null ? 'kein Wind gemessen' : st.wind + ' km/h'];
+    if (st.direction != null) parts[0] += ' aus ' + compass(st.direction);
+    if (st.gust != null) parts.push('Böen ' + st.gust + ' km/h');
+    return parts.join(', ');
+  }
+  var COMPASS = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+  function compass(deg) { return COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8]; }
+
+  // Pop-up beim Tipp auf einen Platz: Eckdaten, Wind in der Nähe und die SHV-Infotafel des Gebiets
+  function SiteDialog(p) {
+    var x = p.site;
+    if (!x) return h(Dialog, { open: false, id: 'site-dlg', title: '', onClose: p.onClose });
+    var area = areaById(x.areas[0]), tafel = shvFor(x), near = stationNear(p.wx, x);
+    var preview = tafel && window.GKG_SHV_PREVIEW && window.GKG_SHV_PREVIEW[tafel.id];
+    var others = tafel ? tafel.sites.filter(function (id) { return id !== x.id; }).map(siteById).filter(Boolean) : [];
+    return h(Dialog, {
+      open: true, id: 'site-dlg', wide: true, onClose: p.onClose,
+      eyebrow: (x.kind === 'start' ? 'Startplatz' : 'Landeplatz') + ' · ' + x.areas.map(function (id) { return areaById(id).name; }).join(', '),
+      title: x.name,
+      footer: function (close) {
+        return h('div', { className: 'pt-actions' },
+          tafel && h(G.Button, { variant: 'primary', href: tafel.url, target: '_blank', rel: 'noopener' }, 'Infotafel als PDF (SHV)'),
+          x.kind === 'landing' && h(G.Button, { variant: 'quiet', href: 'https://www.google.com/maps/dir/?api=1&destination=' + x.lat + ',' + x.lon, target: '_blank', rel: 'noopener' }, 'Route'),
+          !p.onArea && h(G.Button, { variant: 'quiet', href: '#gebiet-' + area.id, onClick: close }, 'Gebiet ' + area.name),
+          h(G.Button, { variant: 'ghost', onClick: close }, 'Schliessen'));
+      }
+    },
+      h('div', { className: 'pt-site-dlg' },
+        h('div', null,
+          x.kind === 'start' && h('p', { className: 'pt-actions' }, h(G.FlightStatus, { status: area.status, label: area.statusLabel }), h('span', { className: 'pt-small pt-muted' }, 'Status: Beispiel')),
+          x.note && h('p', null, x.note),
+          h(SiteFacts, { site: x }),
+          near && h('div', { className: 'pt-site-wind' },
+            h('h3', { className: 'pt-h4' }, 'Wind in der Nähe'),
+            h('p', null, h('b', null, windText(near.station))),
+            h('p', { className: 'pt-small pt-muted' }, near.station.station + ' · ' + near.km.toFixed(1).replace('.', ',') + ' km entfernt · ' + near.station.updated + ' · ' + (near.station.live ? 'Quelle: ' + near.station.source : 'Beispielwert')))),
+        h('section', { className: 'pt-shv', 'aria-labelledby': 'shv-t' },
+          tafel
+            ? h(Fragment, null,
+                h('h3', { id: 'shv-t', className: 'pt-h4' }, tafel.title),
+                preview && h('a', { className: 'pt-shv-preview', href: tafel.url, target: '_blank', rel: 'noopener' },
+                  h('img', { src: preview, alt: 'Vorschau ' + tafel.title + ' – öffnet das PDF', loading: 'lazy' })),
+                h('p', { className: 'pt-small pt-muted' }, 'Auszug aus der Tafel. Massgebend ist immer die aktuelle Tafel des SHV.'),
+                h('ul', { className: 'pt-shv-rules' }, tafel.rules.map(function (r, i) { return h('li', { key: i }, r); })),
+                tafel.note && h('p', { className: 'pt-small' }, tafel.note),
+                others.length > 0 && h(Fragment, null,
+                  h('p', { className: 'pt-small', style: { margin: 'var(--space-4) 0 var(--space-2)' } }, h('b', null, 'Ebenfalls auf dieser Tafel:')),
+                  h('ul', { className: 'pt-shv-sites' }, others.map(function (o) {
+                    return h('li', { key: o.id }, h('button', { type: 'button', className: 'pt-tab', onClick: function () { p.onPick(o.id); } }, o.name));
+                  }))))
+            : h(Fragment, null,
+                h('h3', { id: 'shv-t', className: 'pt-h4' }, 'SHV-Infotafel'),
+                h('p', null, 'Für ' + area.name + ' ist keine SHV-Infotafel bekannt. Das Ressort Fluggebiete ergänzt die Regeln.'),
+                h('p', { className: 'pt-small' }, 'Die Infotafeln der anderen Gebiete stehen auf ', ext('https://www.shv-fsvl.ch', 'shv-fsvl.ch'), '.')))));
+  }
+
   function SitePanel(p) {
-    var x = p.site, area = areaById(x.areas[0]);
+    var x = p.site, area = areaById(x.areas[0]), near = stationNear(p.wx, x);
     var region = (x.kind === 'start' ? 'Startplatz' : 'Landeplatz') + ' · ' + x.areas.map(function (id) { return areaById(id).name; }).join(', ');
     return h('div', { className: 'pt-sitepanel' },
       h(G.SpotCard, {
@@ -254,25 +314,44 @@
         href: '#gebiet-' + x.areas[0], cta: 'Gebiet ' + area.name,
         routeHref: x.kind === 'landing' ? 'https://www.google.com/maps/dir/?api=1&destination=' + x.lat + ',' + x.lon : undefined
       }),
-      x.level && h('p', { className: 'pt-small' }, h('b', null, 'Schwierigkeit: '), x.level),
-      h(SiteFacts, { site: x }));
+      h(G.Button, { variant: 'quiet', onClick: p.onInfo }, shvFor(x) ? 'SHV-Infotafel und Details' : 'Details zum Platz'),
+      near && h('p', { className: 'pt-small' }, h('b', null, 'Wind in der Nähe: '), windText(near.station), h('span', { className: 'pt-muted' }, ' · ' + near.station.station + (near.station.live ? '' : ' (Beispiel)'))));
   }
 
-  function Legend() {
+  function StationPanel(p) {
+    var st = p.station;
+    var site = D.sites.slice().sort(function (a, b) { return km(a, st) - km(b, st); })[0];
+    return h('div', { className: 'pt-sitepanel' },
+      h(G.WeatherCard, Object.assign({ key: st.id }, st)),
+      site && h('p', { className: 'pt-small' }, 'Nächster Platz: ', h('button', { type: 'button', className: 'pt-linkbtn', onClick: function () { p.onSite(site.id); } }, site.name), ' (' + km(site, st).toFixed(1).replace('.', ',') + ' km)'),
+      st.sourceId === 'swissmetnet' && h('p', { className: 'pt-small pt-muted' }, 'Quelle: MeteoSchweiz'));
+  }
+
+  function Legend(p) {
     return h('ul', { className: 'pt-legend', 'aria-label': 'Legende' },
       h('li', null, h('span', { className: 'pt-legend-start', 'aria-hidden': true }), 'Startplatz – Farbe zeigt den Flugstatus (Beispiel)'),
       h('li', null, h('span', { className: 'pt-legend-landing', 'aria-hidden': true }), 'Landeplatz'),
+      p.wx && h('li', null, h('span', { className: 'pt-legend-wx', 'aria-hidden': true }), 'Windstation: Pfeil zeigt, wohin der Wind weht; Zahl in km/h' + (p.wx.live ? '' : ' (Beispielwerte)')),
       h('li', null, 'Gelände 1,3-fach überhöht'));
   }
 
-  function Areas() {
+  function Areas(p) {
     var s = useState(null), sel = s[0], setSel = s[1];
+    var d = useState(null), dlg = d[0], setDlg = d[1];
     var apiRef = React.useRef(null);
+    var wx = p.wx;
     var site = sel && sel.type === 'site' ? siteById(sel.id) : null;
     var area = sel && sel.type === 'area' ? areaById(sel.id) : null;
+    var station = sel && sel.type === 'station' && wx ? wx.stations.filter(function (x) { return x.id === sel.id; })[0] : null;
     var starts = D.sites.filter(function (x) { return x.kind === 'start'; }).length;
     var landings = D.sites.length - starts;
     function pickArea(id) { setSel({ type: 'area', id: id }); if (apiRef.current) apiRef.current.focusArea(id); }
+    function pickSite(id) { setSel({ type: 'site', id: id }); setDlg(id); }
+    function pickStation(id) {
+      setSel({ type: 'station', id: id });
+      var st = wx && wx.stations.filter(function (x) { return x.id === id; })[0];
+      if (st && apiRef.current) apiRef.current.focusPoint(st.lat, st.lon);
+    }
     return h(Fragment, null,
       h(PageHead, { title: 'Fluggebiete', lead: 'Acht Gebiete, ' + starts + ' Startplätze, ' + landings + ' Landeplätze – im Gelände. Vor jedem Flug gilt: Gebietsregeln und SHV-Infotafel beachten.' }),
       h(Wrap, null,
@@ -282,23 +361,26 @@
           })),
         h('div', { className: 'pt-map-layout' },
           h('div', null,
-            h(Map3D, { apiRef: apiRef, selected: site ? site.id : null, onSelect: function (id) { setSel({ type: 'site', id: id }); }, onOverview: function () { setSel(null); } }),
-            h(Legend)),
+            h(Map3D, { apiRef: apiRef, wx: wx, selected: site ? site.id : null, onSelect: pickSite, onStation: pickStation, onOverview: function () { setSel(null); } }),
+            h(Legend, { wx: wx }),
+            h(StationNote, { wx: wx })),
           h('div', { 'aria-live': 'polite' },
-            site ? h(SitePanel, { site: site })
+            site ? h(SitePanel, { site: site, wx: wx, onInfo: function () { setDlg(site.id); } })
+              : station ? h(StationPanel, { station: station, onSite: pickSite })
               : area ? h(Fragment, null,
                   h(G.SpotCard, Object.assign({ key: area.id }, spotProps(area))),
                   h('ul', { className: 'pt-sitelist' }, sitesOf(area.id).map(function (x) {
-                    return h('li', { key: x.id }, h('button', { type: 'button', onClick: function () { setSel({ type: 'site', id: x.id }); } },
+                    return h('li', { key: x.id }, h('button', { type: 'button', onClick: function () { pickSite(x.id); } },
                       h('span', null, x.name), h('span', { className: 'pt-muted' }, (x.kind === 'start' ? 'Start' : 'Landung') + ' · ' + fmtAlt(x.alt) + ' m')));
                   })))
               : h('div', { className: 'pt-panel' },
                   h('h2', null, 'Start- und Landeplätze'),
-                  h('p', null, 'Tippe auf einen Tropfen (Startplatz) oder einen Kreis (Landeplatz), oder wähle oben ein Gebiet.'),
+                  h('p', null, 'Tippe auf einen Tropfen (Startplatz) oder einen Kreis (Landeplatz) – dann erscheinen die Eckdaten und die SHV-Infotafel. Die runden Schilder mit Pfeil sind Windstationen.'),
                   h('p', { className: 'pt-small pt-muted' }, 'Verschieben mit einem Finger bzw. der Maus, drehen und neigen mit zwei Fingern oder mit rechter Maustaste.')))),
-        h('p', { className: 'pt-source' }, 'Koordinaten aus den SHV-Infotafeln, der DHV-Geländedatenbank, Paragliding365 und braunwald.ch, jeweils gegen das Höhenmodell geprüft. Plätze mit Hinweis «Vom Ressort zu bestätigen» sind unsicher. Relief aus offenen Höhendaten (Terrain Tiles, u. a. EU-DEM © Copernicus); im Live-Betrieb ist das swisstopo-Luftbild vorgesehen.')),
+        h('p', { className: 'pt-source' }, 'Koordinaten aus den SHV-Infotafeln, der DHV-Geländedatenbank, Paragliding365 und braunwald.ch, jeweils gegen das Höhenmodell geprüft. Plätze mit Hinweis «Vom Ressort zu bestätigen» sind unsicher. Wind: flightbuddyki.ch (WindBuddy/FANET, Holfuy, MeteoSchweiz). Relief aus offenen Höhendaten (Terrain Tiles, u. a. EU-DEM © Copernicus); im Live-Betrieb ist das swisstopo-Luftbild vorgesehen.')),
       h(Section, { id: 'alle', title: 'Alle Gebiete' },
-        h('div', { className: 'pt-grid' }, D.areas.map(function (x) { return h(G.SpotCard, Object.assign({ key: x.id }, spotProps(x))); }))));
+        h('div', { className: 'pt-grid' }, D.areas.map(function (x) { return h(G.SpotCard, Object.assign({ key: x.id }, spotProps(x))); }))),
+      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: wx, onClose: function () { setDlg(null); }, onPick: function (id) { setDlg(id); setSel({ type: 'site', id: id }); } }));
   }
 
   function SiteTable(p) {
@@ -308,7 +390,7 @@
       h('tbody', null, p.sites.map(function (x) {
         return h('tr', { key: x.id },
           h('td', { className: 'pt-site-cell' },
-            h('b', null, x.name),
+            h('button', { type: 'button', className: 'pt-linkbtn pt-site-name', onClick: function () { p.onOpen(x.id); } }, x.name),
             h('span', { className: 'pt-small pt-muted' }, (x.kind === 'start' ? 'Startplatz' : 'Landeplatz') + ' · Quelle: ', x.srcUrl ? ext(x.srcUrl, x.src) : x.src),
             x.check && h('span', null, h(G.FlightStatus, { status: 'caution', label: 'Zu bestätigen' }))),
           h('td', { className: 'num' }, fmtAlt(x.alt) + ' m'),
@@ -319,8 +401,10 @@
 
   function AreaDetail(p) {
     var a = areaById(p.id);
+    var d = useState(null), dlg = d[0], setDlg = d[1];
     if (!a) return h(NotFound);
     var notices = D.notices.filter(function (n) { return n.area === a.id; });
+    var tafeln = Object.keys(D.shv).filter(function (k) { return sitesOf(a.id).some(function (x) { return D.shv[k].sites.indexOf(x.id) >= 0; }); }).map(function (k) { return D.shv[k]; });
     return h(Fragment, null,
       h(PageHead, { crumb: h(Fragment, null, h('a', { href: '#fluggebiete' }, 'Fluggebiete'), ' / ', a.name), title: a.name, lead: a.region },
         h('div', { className: 'pt-actions', style: { marginTop: 'var(--space-4)' } },
@@ -328,12 +412,13 @@
           h('span', { className: 'pt-small pt-muted' }, 'Status: Beispiel'))),
       h(Wrap, null,
         h('div', { className: 'pt-detail-map' },
-          h(Map3D, { compact: true, focusArea: a.id, label: '3D-Karte ' + a.name, onSelect: function () {} })),
+          h(Map3D, { compact: true, focusArea: a.id, wx: p.wx, label: '3D-Karte ' + a.name, onSelect: function (id) { setDlg(id); } })),
         h('div', { className: 'pt-detail' },
         h('div', null,
           h('div', { className: 'pt-block' },
             h('h2', null, 'Start- und Landeplätze'),
-            h(SiteTable, { sites: sitesOf(a.id) })),
+            h('p', { className: 'pt-small pt-muted', style: { margin: '0 0 var(--space-3)' } }, 'Tippe auf einen Namen für Details und die SHV-Infotafel.'),
+            h(SiteTable, { sites: sitesOf(a.id), onOpen: setDlg })),
           a.missing && h('div', { className: 'pt-panel pt-block' }, h('h2', null, 'Inhalte folgen'), h('p', null, 'Für dieses Gebiet waren auf gkg.ch keine Details lesbar. Das Ressort Fluggebiete ergänzt Zugang und Regeln.')),
           a.starts && h('div', { className: 'pt-block' },
             h('h2', null, 'Startplätze im Detail'),
@@ -350,20 +435,38 @@
           h('p', { className: 'pt-source' }, 'Gebietstexte aus gkg.ch (Stand 2025). Koordinaten aus SHV-Infotafeln, DHV und Paragliding365, gegen das Höhenmodell geprüft. Vor dem Go-Live bestätigt das Ressort Fluggebiete alle Angaben.')),
         h('aside', { className: 'pt-aside' },
           notices.length > 0 && h('div', { className: 'pt-panel' }, h('h2', null, 'Aktuelle Meldung'), h(NoticeList, { items: notices })),
+          tafeln.length > 0 && h('div', { className: 'pt-panel' },
+            h('h2', null, tafeln.length > 1 ? 'SHV-Infotafeln' : 'SHV-Infotafel'),
+            h('ul', { className: 'pt-links' }, tafeln.map(function (t) { return h('li', { key: t.url }, ext(t.url, t.title + ' (PDF)')); })),
+            h('p', { className: 'pt-small pt-muted' }, 'Massgebend ist die aktuelle Tafel des SHV.')),
           h('div', { className: 'pt-panel' },
             h('h2', null, 'Vor dem Start'),
             h('p', null, 'Wind, Webcam und Gebietsmeldung prüfen. Die Entscheidung zu starten liegt immer bei dir als Pilot/in.'),
             h('p', null, h('a', { href: '#wetter' }, 'Windwerte ansehen'))),
-          h(JahreskarteTeaser)))));
+          h(JahreskarteTeaser)))),
+      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: p.wx, onArea: true, onClose: function () { setDlg(null); }, onPick: setDlg }));
   }
 
   /* ---------- Wetter, Sport, Verein ---------- */
-  function Weather() {
+  function Weather(p) {
+    var wx = p.wx;
+    var r = useState(false), busy = r[0], setBusy = r[1];
+    function reload() { setBusy(true); WX.load(true).then(function () { setBusy(false); }); }
+    var sources = wx ? wx.stations.reduce(function (acc, st) { if (acc.indexOf(st.source) < 0) acc.push(st.source); return acc; }, []) : [];
     return h(Fragment, null,
-      h(PageHead, { title: 'Wetter', lead: 'Windwerte der Stationen in den Fluggebieten. Die Entscheidung zu starten liegt immer bei dir.' }),
+      h(PageHead, { title: 'Wetter', lead: 'Windwerte der Stationen in und um die Fluggebiete. Die Entscheidung zu starten liegt immer bei dir.' }),
       h(Wrap, null,
-        h('div', { className: 'pt-grid' }, D.weather.map(function (w) { return h(G.WeatherCard, Object.assign({ key: w.station }, w)); })),
-        h('p', { className: 'pt-source' }, 'Beispielwerte. Im echten Betrieb kommen die Werte von den Stationen, die heute auf gkg.ch verlinkt sind (u. a. die Klubstation Obere Bogmen und braunwald.ch), und werden alle paar Minuten aktualisiert.')),
+        h('div', { className: 'pt-actions', style: { marginBottom: 'var(--space-6)' } },
+          h(G.Button, { variant: 'quiet', onClick: reload, disabled: busy }, busy ? 'Wird aktualisiert …' : 'Aktualisieren'),
+          h(G.Button, { variant: 'ghost', href: '#fluggebiete' }, 'Auf der Karte zeigen'),
+          wx && h('span', { className: 'pt-small pt-muted', role: 'status' }, wx.stations.length + ' Stationen' + (wx.live ? ' · live von flightbuddyki.ch' : ' · Beispielwerte'))),
+        h(StationNote, { wx: wx }),
+        wx ? h('div', { className: 'pt-grid' }, wx.stations.map(function (w) { return h(G.WeatherCard, Object.assign({ key: w.id }, w)); }))
+          : h('p', { className: 'pt-muted', role: 'status' }, 'Stationen werden geladen …'),
+        h('p', { className: 'pt-source' },
+          'Daten: flightbuddyki.ch (Umkreis 35 km um Glarus) mit WindBuddy-Stationen über FANET, Holfuy und dem Messnetz von MeteoSchweiz. ',
+          wx && wx.live && sources.indexOf('MeteoSchweiz') >= 0 ? 'Quelle: MeteoSchweiz. ' : '',
+          'Ampel nur zur Orientierung: ab ' + WX.limits.gustCaution + ' km/h Böen oder ' + WX.limits.spreadCaution + ' km/h Böen über dem Mittelwind «Böig», ab ' + WX.limits.windStop + ' km/h Wind oder ' + WX.limits.gustStop + ' km/h Böen «Starker Wind», älter als ' + Math.round(WX.limits.staleS / 60) + ' Min. «Veraltet». Die Schwellen legt das Ressort Sicherheit fest.')),
       h(Section, { id: 'links', title: 'Prognosen & Links' },
         h('div', { className: 'pt-panel' }, h('ul', { className: 'pt-links' },
           h('li', null, ext('https://www.meteoschweiz.admin.ch', 'MeteoSchweiz'), h('span', { className: 'pt-muted' }, ' – Prognosen und Warnungen')),
@@ -398,7 +501,45 @@
     return h('span', { className: 'pt-copy' }, h('code', null, p.text), h(G.Button, { variant: 'quiet', onClick: copy }, 'Kopieren'));
   }
 
+  // Beitritt: landet als Antrag beim Aktuariat (Verwaltung → Mitglieder → Anträge)
+  function JoinDialog(p) {
+    var blank = { first: '', last: '', email: '', street: '', zip: '', city: '', category: 'Aktiv' };
+    var f = useState(blank), form = f[0], setForm = f[1];
+    var e = useState({}), errors = e[0], setErrors = e[1];
+    function set(k) { return function (ev) { var o = Object.assign({}, form); o[k] = ev.target.value; setForm(o); }; }
+    function submit(ev, close) {
+      var err = {};
+      if (!form.first.trim()) err.first = 'Bitte deinen Vornamen eingeben.';
+      if (!form.last.trim()) err.last = 'Bitte deinen Nachnamen eingeben.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) err.email = 'Bitte eine gültige E-Mail-Adresse eingeben.';
+      if (!/^\d{4}$/.test(form.zip.trim())) err.zip = 'Bitte eine vierstellige Postleitzahl eingeben.';
+      if (!form.city.trim()) err.city = 'Bitte den Ort eingeben.';
+      setErrors(err);
+      if (Object.keys(err).length) return;
+      var data = {}; Object.keys(form).forEach(function (k) { data[k] = form[k].trim(); });
+      S.actions.addRequest(null, 'Eintritt', 'Neues Mitglied über das Anmeldeformular: ' + data.first + ' ' + data.last + ', ' + data.zip + ' ' + data.city + ', ' + data.category + '.', data, 'Anmeldeformular');
+      setForm(blank);
+      close();
+      var fee = S.FEES[data.category];
+      p.notify('Danke! Das Aktuariat meldet sich.' + (fee ? ' Die Rechnung über CHF ' + chf(fee) + ' folgt nach der Aufnahme.' : ''));
+    }
+    function field(k, label, type, auto) {
+      return h(UI.Field, { id: 'j-' + k, label: label, error: errors[k], input: { type: type || 'text', value: form[k], autoComplete: auto, onChange: set(k) } });
+    }
+    return h(Dialog, { open: p.open, id: 'join', title: 'Mitglied werden', eyebrow: 'Gleitschirmklub Glarnerland', onClose: p.onClose },
+      h(UI.DialogForm, { onSubmit: submit, submit: 'Anmeldung senden' },
+        h('div', { className: 'pt-form-row' }, field('first', 'Vorname', 'text', 'given-name'), field('last', 'Nachname', 'text', 'family-name')),
+        field('email', 'E-Mail', 'email', 'email'),
+        field('street', 'Strasse und Nr.', 'text', 'street-address'),
+        h('div', { className: 'pt-form-row' }, field('zip', 'PLZ', 'text', 'postal-code'), field('city', 'Ort', 'text', 'address-level2')),
+        h(UI.Field, { id: 'j-cat', label: 'Mitgliedschaft' },
+          h('select', { id: 'j-cat', value: form.category, onChange: set('category') },
+            D.membership.map(function (m) { var k = m.kind.replace('mitglied', ''); return h('option', { key: m.kind, value: k }, m.kind + (m.fee ? ' – CHF ' + chf(m.fee) : '')); }))),
+        h('p', { className: 'pt-hint' }, 'Im Prototyp wird nichts verschickt. Der Antrag erscheint in der Verwaltung beim Aktuariat.')));
+  }
+
   function Verein(p) {
+    var j = useState(false), join = j[0], setJoin = j[1];
     return h(Fragment, null,
       h(PageHead, { title: 'Verein', lead: 'Der Gleitschirmklub Glarnerland wurde 1987 gegründet und zählt 185 Mitglieder.' }),
       h(Wrap, null,
@@ -409,7 +550,9 @@
             return h('tr', { key: m.kind }, h('td', null, h('b', null, m.kind)), h('td', { className: 'num' }, m.fee == null ? 'frei' : 'CHF ' + chf(m.fee)), h('td', null, m.note));
           })))),
         h('div', { className: 'pt-actions', style: { marginTop: 'var(--space-6)' } },
-          h(G.Button, { variant: 'primary', onClick: function () { p.notify('Das Anmeldeformular folgt in Phase 4 (Mitgliederverwaltung).'); } }, 'Mitglied werden'))),
+          h(G.Button, { variant: 'primary', onClick: function () { setJoin(true); } }, 'Mitglied werden'),
+          h('span', { className: 'pt-small pt-muted' }, 'Schon Mitglied? ', h('a', { href: '#mein-gkg' }, 'Zu «Mein GKG»')))),
+      h(JoinDialog, { open: join, onClose: function () { setJoin(false); }, notify: p.notify }),
       h(Section, { id: 'kontakt', title: 'Vorstand & Kontakt' },
         h('div', { className: 'pt-grid' },
           h('div', { className: 'pt-panel' }, h('h3', null, 'Vorstand'), h('p', null, 'Präsident: R. Wiget'), h('p', { className: 'pt-muted pt-small' }, 'Die weiteren Ressorts folgen mit dem Export von gkg.ch.')),
@@ -436,7 +579,7 @@
               h('p', { className: 'pt-source' }, 'Sortiment, Farben und Preise sind Beispiele. Fotos folgen, sobald das Logo als Vektordatei vorliegt.'))
           : h('div', { role: 'tabpanel', id: 'panel-markt', 'aria-labelledby': 'tab-markt' },
               h('div', { className: 'pt-actions', style: { marginBottom: 'var(--space-6)' } },
-                h(G.Button, { variant: 'primary', href: '#login' }, 'Inserat aufgeben'),
+                h(G.Button, { variant: 'primary', href: '#mein-gkg' }, 'Inserat aufgeben'),
                 h('span', { className: 'pt-small pt-muted' }, 'Inserieren und Kontakt nur mit Login.')),
               h('div', { className: 'pt-grid' }, D.listings.map(function (l) { return h(G.ListingCard, Object.assign({ key: l.title }, l)); })),
               h('p', { className: 'pt-source' }, 'Beispielinserate.')),
@@ -590,8 +733,9 @@
         setMethod: function (m) { p.setCheckout(Object.assign({}, c, { method: m })); },
         back: function () { setStep(2); },
         done: function () {
-          var f = c.form;
-          p.setCard({ holder: (f.first + ' ' + f.last).trim(), email: f.email.trim(), photo: f.photo, kind: f.kind, method: c.method, number: D.season + '-0' + String(100 + Math.floor(Math.random() * 900)) });
+          var f = c.form, holder = (f.first + ' ' + f.last).trim();
+          var saved = S.actions.buyCard({ holder: holder, email: f.email.trim(), photo: f.photo, kind: f.kind, method: c.method, memberId: f.memberId });
+          p.setCard({ holder: holder, email: f.email.trim(), photo: f.photo, kind: f.kind, method: c.method, number: saved.id });
           setStep(4);
         }
       });
@@ -610,7 +754,13 @@
   /* ---------- Kontrolle ---------- */
   function Control(p) {
     var s = useState(null), result = s[0], setResult = s[1];
-    var card = p.card || { holder: 'Anna Muster', number: D.season + '-0142', kind: 'Gast', photo: null };
+    var db = S.use();
+    var valid = db.cards.filter(function (c) { return c.status === 'gültig'; });
+    var mine = p.card && db.cards.filter(function (c) { return c.id === p.card.number; })[0];
+    var pick = mine || valid[valid.length - 1];
+    var blocked = db.cards.filter(function (c) { return c.status === 'gesperrt'; })[0];
+    function show(c) { return c ? { holder: c.holder, number: c.id, kind: c.kind, photo: c.photo || (p.card && p.card.number === c.id ? p.card.photo : null), status: c.status, reason: c.reason } : null; }
+    var card = show(result === 'stop' ? blocked : pick) || { holder: '–', number: '–', kind: '', photo: null };
     return h(Fragment, null,
       h(PageHead, { title: 'Kontrolle am Startplatz', lead: 'Kontrolleur/innen öffnen die Kontroll-Seite im Handy-Browser und scannen den QR-Code. Keine App, kein Aufwand für die Pilot/innen.' }),
       h(Wrap, null, h('div', { className: 'pt-split' },
@@ -620,7 +770,7 @@
             h('li', null, h('div', null, h('b', null, 'Echtheit'), 'Die Signatur im QR-Code verrät jede Fälschung.')),
             h('li', null, h('div', null, h('b', null, 'Gültigkeit'), 'Saison und Sperrstatus, online gegen die Klub-Datenbank.')),
             h('li', null, h('div', null, h('b', null, 'Person'), 'Name und Foto erscheinen gross – Weitergeben lohnt sich nicht.'))),
-          h('p', { className: 'pt-source' }, p.card ? 'Gezeigt wird deine eben gekaufte Karte.' : 'Gezeigt wird eine Beispielkarte. Kauf zuerst eine Karte, dann erscheint hier deine.'),
+          h('p', { className: 'pt-source' }, (p.card ? 'Gezeigt wird deine eben gekaufte Karte. ' : 'Gezeigt wird eine Beispielkarte. Kauf zuerst eine Karte, dann erscheint hier deine. ') + 'Der Status kommt aus der Klub-Datenbank: Sperrt das Ressort Fluggebiete eine Karte in der Verwaltung, zeigt die Kontrolle sie sofort als gesperrt.'),
           h('p', { className: 'pt-hint' }, 'Die Kamera ist im Prototyp nicht verbunden – der Scan wird simuliert.')),
         h('div', { className: 'pt-phone' }, h('div', { className: 'pt-phone-screen' },
           h('div', { className: 'pt-phone-bar' }, h('span', null, 'GKG Kontrolle'), h('span', null, 'Hüsliberg')),
@@ -631,43 +781,14 @@
                   h(G.Button, { variant: 'primary', onClick: function () { setResult('go'); } }, 'Scan simulieren: gültige Karte'),
                   h(G.Button, { variant: 'quiet', onClick: function () { setResult('stop'); } }, 'Scan simulieren: gesperrte Karte'))
               : h(Fragment, null,
-                  h('div', { className: 'pt-result pt-result-' + result },
-                    h('span', { className: 'pt-result-big' }, result === 'go' ? 'Gültig' : 'Gesperrt'),
+                  h('div', { className: 'pt-result pt-result-' + (card.status === 'gültig' ? 'go' : 'stop') },
+                    h('span', { className: 'pt-result-big' }, card.status === 'gültig' ? 'Gültig' : 'Gesperrt'),
                     h(Avatar, { photo: card.photo, name: card.holder, large: true }),
                     h('p', { className: 'pt-h3' }, card.holder),
                     h('p', { className: 'gkg-data' }, 'Karte ' + card.number + ' · Saison ' + D.season),
                     h('p', null, card.kind),
-                    result === 'stop' && h('p', { className: 'pt-small' }, 'Als verloren gemeldet (Beispiel). Bitte Ersatzkarte zeigen lassen.')),
+                    card.status !== 'gültig' && h('p', { className: 'pt-small' }, (card.reason || 'Gesperrt') + '. Bitte Ersatzkarte zeigen lassen.')),
                   h(G.Button, { variant: 'primary', onClick: function () { setResult(null); } }, 'Nächste Karte scannen'))))))));
-  }
-
-  /* ---------- Login ---------- */
-  function Login(p) {
-    var s = useState(''), email = s[0], setEmail = s[1];
-    var t = useState(false), sent = t[0], setSent = t[1];
-    var e = useState(null), err = e[0], setErr = e[1];
-    function submit(ev) {
-      ev.preventDefault();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setErr('Bitte eine gültige E-Mail-Adresse eingeben.'); return; }
-      setErr(null); setSent(true);
-    }
-    return h(Fragment, null,
-      h(PageHead, { title: 'Mein GKG', lead: 'Anmelden ohne Passwort: Du bekommst einen Anmeldelink per E-Mail.' }),
-      h(Wrap, null,
-        !sent && h('form', { className: 'pt-form', noValidate: true, onSubmit: submit },
-          h('div', { className: 'pt-field' },
-            h('label', { htmlFor: 'l-email' }, 'E-Mail'),
-            h('input', { id: 'l-email', type: 'email', autoComplete: 'email', value: email, 'aria-invalid': err ? 'true' : undefined, onChange: function (ev) { setEmail(ev.target.value); } }),
-            err && h('p', { className: 'pt-error' }, err)),
-          h('div', { className: 'pt-actions' }, h(G.Button, { variant: 'primary', type: 'submit' }, 'Anmeldelink anfordern'))),
-        sent && h(Fragment, null,
-          h('p', { className: 'pt-hint', style: { marginBottom: 'var(--space-6)' } }, 'Im Prototyp wird keine E-Mail verschickt. So sieht dein Bereich nach der Anmeldung aus:'),
-          h('div', { className: 'pt-grid' },
-            h('div', { className: 'pt-panel' }, h('h3', null, 'Meine Jahreskarte'),
-              p.card ? h(Fragment, null, h('p', null, 'Karte ' + p.card.number + ' · Saison ' + D.season), h(G.FlightStatus, { status: 'go', label: 'Gültig' }))
-                : h(Fragment, null, h('p', null, 'Noch keine Karte für ' + D.season + '.'), h('p', null, h(G.Button, { variant: 'wing', href: '#jahreskarte' }, 'Jahreskarte holen')))),
-            h('div', { className: 'pt-panel' }, h('h3', null, 'Meine Bestellungen'), h('p', null, p.cart.length ? p.cart.length + ' Artikel im Warenkorb' : 'Keine Bestellungen.')),
-            h('div', { className: 'pt-panel' }, h('h3', null, 'Meine Inserate'), h('p', null, 'Keine Inserate.'), h('p', null, h('a', { href: '#shop' }, 'Zum Gebrauchtmarkt')))))));
   }
 
   function NotFound() {
@@ -684,9 +805,10 @@
         h('li', null, h('a', { href: '#verein' }, 'Verein & Mitgliedschaft')),
         h('li', null, h('a', { href: '#sport' }, 'Sport & GKG-Cup')),
         h('li', null, h('a', { href: '#kontrolle' }, 'Kontrolle am Startplatz')),
-        h('li', null, h('a', { href: '#login' }, 'Mein GKG')))),
+        h('li', null, h('a', { href: '#mein-gkg' }, 'Mein GKG')),
+        h('li', null, h('a', { href: '#verwaltung' }, 'Verwaltung (Vorstand und Ressorts)')))),
       h('div', null, h('h2', null, 'Prototyp'),
-        h('p', { className: 'pt-small' }, 'Stand 27.10.2026. Wetterwerte, Status, Gebietsmeldungen, Preise und Inserate sind Beispieldaten. Gebietstexte stammen von gkg.ch.'),
+        h('p', { className: 'pt-small' }, 'Stand 28.10.2026. Status, Gebietsmeldungen, Preise, Inserate, Personen und Buchungen sind Beispieldaten. Wind live von flightbuddyki.ch, sonst Beispielwerte. Gebietstexte stammen von gkg.ch.'),
         h('p', { className: 'pt-small pt-muted' }, 'Impressum und Datenschutz folgen.'))));
   }
 
@@ -696,6 +818,7 @@
     var cState = useState(null), card = cState[0], setCard = cState[1];
     var kState = useState(newCheckout()), checkout = kState[0], setCheckout = kState[1];
     var bState = useState([]), cart = bState[0], setCart = bState[1];
+    var wx = useStations();
 
     useEffect(function () {
       function onHash() { setRoute(currentRoute()); window.scrollTo(0, 0); }
@@ -715,7 +838,7 @@
     }
     function startCheckout() { setCheckout(Object.assign(newCheckout(), { step: 2 })); go('jahreskarte'); }
 
-    var shared = { notify: notify, addToCart: addToCart, cart: cart, card: card, setCard: setCard, checkout: checkout, setCheckout: setCheckout, startCheckout: startCheckout };
+    var shared = { notify: notify, addToCart: addToCart, cart: cart, card: card, setCard: setCard, checkout: checkout, setCheckout: setCheckout, startCheckout: startCheckout, wx: wx };
     var page;
     if (route === 'start') page = h(Start, shared);
     else if (route === 'fluggebiete') page = h(Areas, shared);
@@ -726,12 +849,13 @@
     else if (route === 'shop') page = h(Shop, shared);
     else if (route === 'jahreskarte') page = h(Checkout, shared);
     else if (route === 'kontrolle') page = h(Control, shared);
-    else if (route === 'login') page = h(Login, shared);
+    else if (route === 'login' || route.indexOf('mein-gkg') === 0) page = h(window.GKGMember.Page, Object.assign({ route: route }, shared));
+    else if (route.indexOf('verwaltung') === 0) page = h(window.GKGAdmin.Page, Object.assign({ route: route }, shared));
     else page = h(NotFound);
 
     return h(Fragment, null,
-      h('div', { className: 'pt-ribbon' }, h(Wrap, null, h('b', null, 'Prototyp'), ' · Klickbar, aber nicht verbunden. Wetter, Status, Preise und Inserate sind Beispieldaten.')),
-      h('div', { className: 'pt-header' }, h(G.SiteHeader, { logoSrc: 'ds/logos/gkg-signet.png', clubName: 'Gleitschirmklub Glarnerland', items: NAV, active: activeLabel(route), homeHref: '#start', loginHref: '#login', ctaHref: '#jahreskarte', cta: 'Jahreskarte' })),
+      h('div', { className: 'pt-ribbon' }, h(Wrap, null, h('b', null, 'Prototyp'), ' · Klickbar, Zahlungen und E-Mails sind nicht verbunden. Personen, Beträge, Status und Inserate sind erfunden.')),
+      h('div', { className: 'pt-header' }, h(G.SiteHeader, { logoSrc: 'ds/logos/gkg-signet.png', clubName: 'Gleitschirmklub Glarnerland', items: NAV, active: activeLabel(route), homeHref: '#start', loginHref: '#mein-gkg', ctaHref: '#jahreskarte', cta: 'Jahreskarte' })),
       h('main', { key: route }, page),
       h(Footer),
       toast && h('div', { className: 'pt-toast', role: 'status', key: toast.at }, toast.msg));
