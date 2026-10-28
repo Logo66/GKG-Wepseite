@@ -16,6 +16,7 @@
     alert: function () { return svg(null, [h('path', { key: 'a', d: 'M12 6v8' }), h('path', { key: 'b', d: 'M12 18.5v.01' })]); },
     cross: function () { return svg(null, [h('path', { key: 'a', d: 'M6.5 6.5l11 11' }), h('path', { key: 'b', d: 'M17.5 6.5l-11 11' })]); },
     arrow: function () { return svg(null, [h('path', { key: 'a', d: 'M12 20V4' }), h('path', { key: 'b', d: 'M6 10l6-6 6 6' })]); },
+    landing: function () { return svg({ strokeWidth: 3 }, h('path', { d: 'M9 5.5v13h7.5' })); },
     wing: function () { return svg({ strokeWidth: 2 }, [h('path', { key: 'a', d: 'M3 10c5-5 13-5 18 0' }), h('path', { key: 'b', d: 'M3 10l9 9 9-9' }), h('path', { key: 'c', d: 'M12 6v13' })]); }
   };
 
@@ -122,9 +123,11 @@
   /* ---------- SpotMarker ---------- */
   function SpotMarker(p) {
     var st = STATUS[p.status] ? p.status : 'go';
-    return h('button', { type: 'button', className: cx('gkg-marker', 'gkg-marker-' + st, p.active && 'gkg-marker-active'), onClick: p.onClick, 'aria-pressed': !!p.active },
-      h('span', { className: 'gkg-marker-pin', 'aria-hidden': true }, STATUS[st].icon()),
-      h('span', { className: 'gkg-marker-label' }, p.label, h('span', { className: 'gkg-vh' }, ' – ' + STATUS[st].label)));
+    var landing = p.kind === 'landing';
+    var sr = landing ? 'Landeplatz' : (p.kind === 'start' ? 'Startplatz, ' : '') + STATUS[st].label;
+    return h('button', { type: 'button', className: cx('gkg-marker', landing ? 'gkg-marker-landing' : 'gkg-marker-' + st, p.active && 'gkg-marker-active', p.className), onClick: p.onClick, onFocus: p.onFocus, 'aria-pressed': !!p.active },
+      h('span', { className: 'gkg-marker-pin', 'aria-hidden': true }, landing ? Icon.landing() : STATUS[st].icon()),
+      h('span', { className: 'gkg-marker-label' }, p.label, h('span', { className: 'gkg-vh' }, ' – ' + sr)));
   }
 
   /* ---------- BuyBox ---------- */
@@ -166,7 +169,7 @@
     var fields = p.fields || [];
     return h('article', { className: 'gkg-pass' },
       h('div', { className: 'gkg-pass-band' },
-        h('span', { className: 'gkg-pass-mark' }, 'GKG'),
+        h('span', { className: 'gkg-pass-mark' }, p.logoSrc && h('img', { className: 'gkg-pass-logo', src: p.logoSrc, alt: '', width: 36, height: 36 }), 'GKG'),
         h('span', { className: 'gkg-pass-kind' }, p.kind || 'Jahreskarte', h('br'), p.season)),
       h('div', { className: 'gkg-pass-body' },
         h('div', { className: 'gkg-pass-person' },
@@ -264,7 +267,9 @@
     var navId = (React.useId ? React.useId() : 'gkg') + '-nav';
     function close() { setOpen(false); }
     return h('header', { className: cx('gkg-header', open && 'gkg-header-open') },
-      h('a', { className: 'gkg-logo', href: p.homeHref || '#', onClick: close }, h('b', null, 'GKG'), h('span', null, p.clubName)),
+      h('a', { className: cx('gkg-logo', p.logoSrc && 'gkg-logo-has-mark'), href: p.homeHref || '#', onClick: close },
+        p.logoSrc && h('img', { className: 'gkg-logo-mark', src: p.logoSrc, alt: '', width: 40, height: 40 }),
+        h('b', null, 'GKG'), h('span', null, p.clubName)),
       h('nav', { id: navId, className: 'gkg-nav-wrap', 'aria-label': 'Hauptnavigation' },
         h('ul', { className: 'gkg-nav' },
           items.map(function (it) {

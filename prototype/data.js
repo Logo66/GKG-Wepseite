@@ -14,7 +14,7 @@ window.GKG_DATA = {
   areas: [
     {
       id: 'mollis', name: 'Mollis', region: 'Glarus Nord', x: 55, y: 36, status: 'go',
-      note: 'Grosse, mittelsteile Startwiese; hinauf mit Taxi oder Sammelbus.',
+      note: 'Startplätze Froni und Froni Winter über Mollis; hinauf mit Taxi oder Sammelbus.',
       access: ['Startplatz: grosse, mittelsteile Wiese.', 'Hinauf mit Taxi oder Sammelbus; Deltapilot/innen können ihr Gerät selbst hochfahren.', 'Anmeldung am Vortag per Telefon oder WhatsApp.'],
       landing: ['Autos auf dem Parkplatz beim Biotop abstellen.', 'Der Landeplatz kann kurzfristig gesperrt sein – 2023 zum Beispiel wegen des Nordostschweizer Schwingfests.'],
       rules: ['SHV-Infotafel zum Fluggebiet Mollis beachten.']
@@ -49,7 +49,7 @@ window.GKG_DATA = {
     },
     {
       id: 'kerenzerberg', name: 'Kerenzerberg', region: 'Glarus Nord', x: 80, y: 30, status: 'caution', statusLabel: 'Anspruchsvoll',
-      note: 'Hike & Fly, Acro und Abendflüge. Anspruchsvoller Start mit Rotoren.',
+      note: 'Start «Kerenzer» über Mollis: Hike & Fly, Acro und Abendflüge. Anspruchsvoll wegen Rotoren.',
       access: ['Bus ab Näfels/Mollis Richtung Filzbach, das letzte Stück zu Fuss.'],
       hazards: ['Anspruchsvoller Start: Rotoren und häufig drehender Wind.'],
       rules: ['SHV-Infotafel zum Fluggebiet Mollis beachten.'],
@@ -68,9 +68,32 @@ window.GKG_DATA = {
     },
     {
       id: 'elm', name: 'Elm', region: 'Glarus Süd · nur Winter', x: 72, y: 84, status: 'caution', statusLabel: 'Nur Winter',
-      note: 'Wintergebiet. Details folgen vom Ressort Fluggebiete.',
+      note: 'Wintergebiet mit Start am Ämpächli. Weitere Details folgen vom Ressort Fluggebiete.',
+      access: ['Mit der Gondelbahn von Elm aufs Ämpächli (laut Paragliding365).'],
       missing: true
     }
+  ],
+
+  // Start- und Landeplätze. Koordinaten WGS84, Höhe m ü. M.
+  // Quellen: SHV-Infotafeln, DHV-Geländedatenbank, Paragliding365, braunwald.ch.
+  // Jeder Punkt ist gegen das Höhenmodell geprüft (Abweichung höchstens 50 m).
+  // check: true = vom Ressort Fluggebiete besonders zu bestätigen.
+  sites: [
+    { id: 'froni', kind: 'start', name: 'Froni', areas: ['mollis'], lat: 47.0722, lon: 9.0908, alt: 1350, dirs: [], src: 'SHV-Infotafel Mollis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf', check: true, note: 'Startrichtung in der Quelle nicht angegeben – das Gelände fällt nach Norden.' },
+    { id: 'froni-winter', kind: 'start', name: 'Froni Winter', areas: ['mollis'], lat: 47.0724, lon: 9.0937, alt: 1362, dirs: ['NW'], level: 'leicht', src: 'SHV-Infotafel Mollis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf' },
+    { id: 'kerenzer', kind: 'start', name: 'Kerenzer', areas: ['kerenzerberg'], lat: 47.1089, lon: 9.0837, alt: 675, dirs: ['NW'], level: 'schwierig (Turbulenzen)', src: 'SHV-Infotafel Mollis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf' },
+    { id: 'mollis-lp', kind: 'landing', name: 'Landeplatz Mollis', areas: ['mollis', 'kerenzerberg', 'hirzli'], lat: 47.0837, lon: 9.0688, alt: 443, src: 'SHV-Infotafel Mollis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf', note: 'Flugplatz Mollis: Piste und Verlängerung nicht überfliegen. Laut SHV-Tafel gilt in der blauen Zone höchstens 900 m ü. M., im rot umrandeten Bereich nicht unter 1047 m ü. M.' },
+    { id: 'huesliberg', kind: 'start', name: 'Hüsliberg', areas: ['huesliberg'], lat: 47.1897, lon: 9.0747, alt: 1012, dirs: ['S', 'SW', 'W'], src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf' },
+    { id: 'rufi', kind: 'landing', name: 'Landeplatz Rufi', areas: ['huesliberg', 'altwis', 'oberebogmen', 'hirzli'], lat: 47.1834, lon: 9.0472, alt: 428, src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf', note: 'Sammelpunkt für das Taxi zum Hüsliberg.' },
+    { id: 'altwis', kind: 'start', name: 'Altwis', areas: ['altwis'], lat: 47.2107, lon: 9.0679, alt: 1055, dirs: ['W', 'NW', 'N'], level: 'leicht', src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf' },
+    { id: 'bogmen', kind: 'start', name: 'Obere Bogmen', areas: ['oberebogmen'], lat: 47.1863, lon: 9.0942, alt: 1432, dirs: ['S', 'SW', 'W'], src: 'SHV-Infotafel Schänis', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf', check: true, note: 'Nur im markierten Bereich starten. Startrichtung mit dem Ressort abgleichen – das grobe Höhenmodell zeigt hier einen Nordwesthang.' },
+    { id: 'hirzli', kind: 'start', name: 'Hirzli', areas: ['hirzli'], lat: 47.13378, lon: 9.00727, alt: 1640, dirs: ['N', 'NO', 'NW'], src: 'Paragliding365 (Stand 2016)', srcUrl: 'https://www.paragliding365.com/index-p-flightarea_details_200.html', check: true, note: 'Position eher ungenau: Das Höhenmodell liegt hier rund 50 m tiefer als angegeben.' },
+    { id: 'kiosk', kind: 'start', name: 'Kiosk', areas: ['braunwald'], lat: 46.9385, lon: 8.9980, alt: 1242, dirs: ['O', 'SO'], src: 'SHV-Infotafel Braunwald, braunwald.ch', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf' },
+    { id: 'gumen', kind: 'start', name: 'Gumen (Winter)', areas: ['braunwald'], lat: 46.9551, lon: 8.9843, alt: 1875, dirs: ['SO', 'S', 'SW'], src: 'SHV-Infotafel Braunwald', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf', note: 'Winterstartplatz unterhalb der Bergstation Gumen; nur im markierten Bereich starten.' },
+    { id: 'gumengrat', kind: 'start', name: 'Gumengrat', areas: ['braunwald'], lat: 46.9600, lon: 8.98721, alt: 2064, dirs: ['S'], src: 'braunwald.ch, SHV-Infotafel Braunwald', srcUrl: 'https://braunwald.ch/de/map/detail/gleitschirm-startplatz-gumengrat-nur-sommer-e9ede009-5616-4d91-825a-35c421c93eed.html', note: 'Nur im Sommer.' },
+    { id: 'rueti', kind: 'landing', name: 'Landeplatz Rüti', areas: ['braunwald'], lat: 46.9311, lon: 9.0065, alt: 630, src: 'SHV-Infotafel Braunwald', srcUrl: 'https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf' },
+    { id: 'aempaechli', kind: 'start', name: 'Ämpächli', areas: ['elm'], lat: 46.91889, lon: 9.14917, alt: 1490, dirs: ['SO', 'S', 'SW'], src: 'Paragliding365 (ältere Angabe)', srcUrl: 'https://www.paragliding365.com/index-p-flightarea_details_215.html', check: true, note: 'Mit der Gondelbahn ab Elm. Quelle ist älter – mit dem Ressort abgleichen.' },
+    { id: 'elm-lp', kind: 'landing', name: 'Landeplatz Elm', areas: ['elm'], lat: 46.91274, lon: 9.16283, alt: 1019, src: 'DHV-Geländedatenbank', srcUrl: 'https://service.dhv.de/db2/details.php?qi=glp_details&item=1290', check: true }
   ],
 
   // Beispiele – im echten Betrieb aus den Messstationen

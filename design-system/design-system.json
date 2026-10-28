@@ -18,8 +18,54 @@
     }
   ],
   "sections": {},
-  "groups": [],
-  "assetGroups": {},
+  "groups": [
+    "Logos"
+  ],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": [
+        "gkg-signet.png",
+        "gkg-sonne-bogen.png",
+        "gkg-sonne-text.png",
+        "original/gkg-signet-original.png",
+        "original/gkg-sonne-original.jpg"
+      ],
+      "files": {
+        "gkg-signet.png": {
+          "name": "gkg-signet.png",
+          "blob": "51b0c95ab8690053432d64a41e4d052f",
+          "size": 15474,
+          "type": "image/png"
+        },
+        "gkg-sonne-bogen.png": {
+          "name": "gkg-sonne-bogen.png",
+          "blob": "32b7e5b1075bf545823af8240efb668a",
+          "size": 92191,
+          "type": "image/png"
+        },
+        "gkg-sonne-text.png": {
+          "name": "gkg-sonne-text.png",
+          "blob": "bc568a2d5a074df33e002f4764425e55",
+          "size": 57902,
+          "type": "image/png"
+        },
+        "original/gkg-signet-original.png": {
+          "name": "original/gkg-signet-original.png",
+          "blob": "e77daa034271c56e74fea8a7840afd97",
+          "size": 22932,
+          "type": "image/png"
+        },
+        "original/gkg-sonne-original.jpg": {
+          "name": "original/gkg-sonne-original.jpg",
+          "blob": "e9fc3616377b7b5c422c5de48e50971e",
+          "size": 1015062,
+          "type": "image/jpeg"
+        }
+      }
+    }
+  },
   "blobs": {},
   "docs": {
     "readme": "project/README.md",
@@ -27,8 +73,8 @@
   },
   "lastChange": {
     "by": "Claude",
-    "at": "2026-10-27T06:26:39Z",
+    "at": "2026-10-28T13:16:21Z",
     "via": "Claude Code",
-    "note": "SiteHeader mit Handy-Menü, SpotCard mit optionalen Werten und eigenem Status-Wort"
+    "note": "Klub-Logos (G-Signet, Sonne), Token logo-ground, Landeplatz-Marker, Signet in SiteHeader und PassCard"
   }
 }

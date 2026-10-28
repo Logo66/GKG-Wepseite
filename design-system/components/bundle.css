@@ -68,6 +68,9 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-marker-caution .gkg-marker-pin { background: var(--caution); color: var(--surface-raised); }
 .gkg-marker-stop .gkg-marker-pin { background: var(--stop); color: var(--surface-raised); }
 .gkg-marker-active .gkg-marker-pin { width: 52px; height: 52px; border-color: var(--wing); box-shadow: var(--shadow-lg); }
+.gkg-marker-landing .gkg-marker-pin { width: 34px; height: 34px; border-radius: var(--radius-full); transform: none; background: var(--ink); color: var(--surface-raised); }
+.gkg-marker-landing .gkg-marker-pin svg { transform: none; }
+.gkg-marker-landing.gkg-marker-active .gkg-marker-pin { width: 42px; height: 42px; }
 .gkg-marker-label { padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--surface-raised); box-shadow: var(--shadow-sm); font: 700 14px/24px var(--font-body); white-space: nowrap; }
 .gkg-marker:focus-visible { outline: 2px solid transparent; }
 .gkg-marker:focus-visible .gkg-marker-label { box-shadow: var(--focus-ring); }
@@ -75,7 +78,8 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 /* PassCard */
 .gkg-pass { width: 340px; max-width: 100%; border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid var(--line); }
 .gkg-pass-band { background: var(--sky); color: var(--on-sky); padding: var(--space-4) var(--space-6); display: flex; align-items: center; justify-content: space-between; }
-.gkg-pass-mark { font: 800 26px/1 var(--font-display); letter-spacing: -.02em; }
+.gkg-pass-mark { display: inline-flex; align-items: center; gap: var(--space-2); font: 800 26px/1 var(--font-display); letter-spacing: -.02em; }
+.gkg-pass-logo { width: 36px; height: 36px; padding: 3px; box-sizing: border-box; border-radius: var(--radius-full); background: var(--logo-ground); object-fit: contain; }
 .gkg-pass-kind { font: 700 14px/20px var(--font-body); text-align: right; }
 .gkg-pass-body { padding: var(--space-6); }
 .gkg-pass-holder { font: 600 20px/26px var(--font-display); margin: var(--space-1) 0 var(--space-4); }
@@ -156,6 +160,8 @@ body { margin: 0; font-family: var(--font-body); font-size: 17px; line-height: 2
 .gkg-header { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-3) var(--space-8); background: var(--surface-raised); border-bottom: 1px solid var(--line); }
 .gkg-logo { display: inline-flex; align-items: baseline; gap: var(--space-2); text-decoration: none; color: var(--ink); }
 .gkg-logo b { font: 800 28px/1 var(--font-display); letter-spacing: -.03em; }
+.gkg-logo-has-mark { align-items: center; }
+.gkg-logo-mark { width: 40px; height: 40px; flex: none; padding: 3px; box-sizing: border-box; border-radius: var(--radius-full); background: var(--logo-ground); object-fit: contain; }
 .gkg-logo span { font: 700 13px/1.2 var(--font-body); color: var(--ink-muted); max-width: 110px; }
 .gkg-nav { display: flex; gap: var(--space-1); margin: 0 auto 0 var(--space-4); padding: 0; list-style: none; }
 .gkg-nav a { display: inline-flex; align-items: center; min-height: var(--tap-target); padding: 0 var(--space-3); border-radius: var(--radius-md); font: 700 16px/1 var(--font-body); color: var(--ink); text-decoration: none; }

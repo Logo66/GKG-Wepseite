@@ -36,3 +36,23 @@ Die FlyCard-Seite selbst (flycard.vivereilgrappa.it) war nicht erreichbar; die A
 - [Vivere il Grappa – Paragliding](https://www.vivereilgrappa.it/en/monte-grappa-paragliding.htm)
 - [Scurbatt – FlyCard Promozione 2024](https://www.scurbatt.it/index.php/it/flycard-bassano-promozione-gennaio-2024)
 - [Paraglidingmap – Bassano](https://www.paraglidingmap.com/regions/bassano)
+
+## Start- und Landeplätze
+
+Koordinaten und Höhen der 15 Plätze in `prototype/data.js`. Jeder Punkt ist gegen das Höhenmodell geprüft (Abweichung höchstens 50 m, meist unter 20 m). Plätze mit `check: true` sind vom Ressort Fluggebiete besonders zu bestätigen.
+
+- [SHV-Infotafel Mollis](https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Mollis.pdf) – Froni, Froni Winter, Kerenzer, Landeplatz Mollis, Flugplatz-Zonen
+- [SHV-Infotafel Schänis](https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Schaenis.pdf) – Hüsliberg, Altwis, Bogmen, Landeplatz Rufi
+- [SHV-Infotafel Braunwald](https://www.shv-fsvl.ch/fileadmin/files/redakteure/Allgemein/Sicherheit/SHVInfotafeln/Braunwald.pdf) – Kiosk, Gumen Winter, Gumengrat, Landeplatz Rüti
+- [braunwald.ch – Startplatz Kiosk](https://braunwald.ch/de/map/detail/gleitschirm-startplatz-braunwald-dorf-kiosk-fe84ceee-5a8c-4523-a194-fe6e55777bb0.html) und [Startplatz Gumengrat](https://braunwald.ch/de/map/detail/gleitschirm-startplatz-gumengrat-nur-sommer-e9ede009-5616-4d91-825a-35c421c93eed.html)
+- [DHV-Geländedatenbank – Hüsliberg](https://service.dhv.de/db2/details.php?qi=glp_details&item=1474), [Braunwald](https://service.dhv.de/db2/details.php?qi=glp_details&item=1477), [Elm](https://service.dhv.de/db2/details.php?qi=glp_details&item=1290)
+- [Paragliding365 – Hirzli](https://www.paragliding365.com/index-p-flightarea_details_200.html) (Stand 2016), [Elm – Schabell/Ämpächli](https://www.paragliding365.com/index-p-flightarea_details_215.html), [Hüsliberg](https://www.paragliding365.com/index-p-flightarea_details_3040.html), [Kerenzerberg](https://www.paragliding365.com/index-p-flightarea_details_204.html)
+
+## Karte
+
+- Höhendaten: [Terrain Tiles auf AWS Open Data](https://registry.opendata.aws/terrain-tiles/) (Mapzen/Tilezen; in Europa u. a. EU-DEM, © Copernicus)
+- Kartenbibliothek: [MapLibre GL JS](https://maplibre.org/) 5.24.0 (BSD-3-Clause)
+
+## Logos
+
+Vom Klub geliefert am 28.10.2026 (G-Signet als PNG, Sonnen-Logo in zwei Fassungen als CMYK-JPEG). Originale unverändert in `design-system/assets/Logos/original/`.

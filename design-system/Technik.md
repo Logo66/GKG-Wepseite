@@ -11,9 +11,30 @@ Ein Vorschlag für den technischen Aufbau. Anbieter und Konditionen ändern sich
 | Anmeldung | E-Mail-Link oder Passkey; Zwei-Faktor für alle Backoffice-Rollen | kein Passwort-Chaos für Mitglieder, starker Schutz für den Vorstand |
 | Zahlung | Payrexx oder Stripe (beide bieten laut Anbieter TWINT an; Gebühren prüfen) | TWINT ist in der Schweiz Pflicht; Kartendaten liegen nie bei uns |
 | Wallet | Apple Wallet (.pkpass) und Google Wallet API | QR-Karte direkt im Handy, ohne eigene App |
-| Karte | MapLibre GL oder Leaflet mit swisstopo-Kartendaten | swisstopo-Daten sind seit 2021 frei nutzbar (Nutzungsbedingungen prüfen) |
+| Karte | MapLibre GL 5 mit 3D-Gelände (siehe unten) | Open Source, schnell, läuft im Browser ohne Plugin; swisstopo-Daten sind seit 2021 frei nutzbar (Nutzungsbedingungen prüfen) |
 | Wetter | serverseitiger Abruf, Zwischenspeicher alle ~10 Min. | schont Schnittstellen-Kontingente, Seite bleibt schnell |
 | Hosting | Schweiz oder EU, tägliche Backups | Datenschutz (revDSG) |
+
+## 3D-Karte der Fluggebiete
+
+**Heute im Prototyp:** MapLibre GL 5.24 mit 3D-Gelände (1,3-fach überhöht), Himmel und Dunst, Marker für 11 Start- und 4 Landeplätze, 2D/3D-Umschalter, Gebiete anfliegen, Infopanel mit Höhe, Startrichtung, Koordinaten (WGS84 und LV95) und Quelle.
+
+- **Gelände:** offene Höhendaten «Terrain Tiles» auf AWS (Mapzen/Tilezen, in Europa u. a. EU-DEM © Copernicus), etwa 30 m Auflösung.
+- **Bild:** ein eigenes schattiertes Relief mit Höhenstufen und Seen, aus denselben Höhendaten gerechnet (`tools/build-tiles.py`).
+- **Kachel-Ringe:** aussen grob, innen fein (z8–11 weit herum, z12 Glarnerland, z13 rund um die Plätze). So endet das Gelände nicht sichtbar am Horizont, und die Datenmenge bleibt klein: Relief 1,0 MB, Höhen 11 MB, wovon jeweils nur die sichtbaren Kacheln geladen werden.
+
+**So lädt sie schnell:**
+- MapLibre (rund 1 MB) wird erst geladen, wenn jemand die Fluggebiete öffnet – die Startseite bleibt leicht.
+- Bis die Karte bereit ist, steht ein Standbild der Startansicht da (67 KB, hell und dunkel, `npm run poster`).
+- Reliefkacheln als WebP (meist 2–10 KB pro Kachel), Höhen nur bis z11.
+- Auf dem Handy verschiebt man mit zwei Fingern (Seite bleibt scrollbar), am Desktop zoomt man mit Strg + Mausrad.
+- Ohne WebGL oder bei einem Ladefehler erscheint das Schema der Gebiete mit Hinweis.
+- Im Test (Software-Grafik ohne GPU) ist die Karte nach 2–4 Sekunden bedienbar; auf echten Geräten mit Grafikchip ist sie schneller (nicht gemessen).
+
+**Für den Live-Betrieb (zu prüfen):**
+- **Luftbild statt Relief:** swisstopo SWISSIMAGE über den WMTS-Dienst `wmts.geo.admin.ch` (Web-Mercator) – im Modul vorbereitet mit `window.GKG_MAP_CONFIG = { imagery: 'swisstopo' }`, aber nicht getestet, weil swisstopo aus der Arbeitsumgebung gesperrt war. Nutzungsbedingungen und Quellenangabe «© swisstopo» beachten.
+- **Feinere Höhen:** swissALTI3D von swisstopo ist viel genauer als 30 m; ob es dafür einen fertigen Kacheldienst für MapLibre gibt, ist offen. Sonst die Höhenkacheln einmalig selbst aus swissALTI3D erzeugen.
+- **Lufträume, Hindernisse, Schutzgebiete** als zusätzliche Ebenen (z. B. Wildruhezonen am Hirzli) – Datenquellen beim SHV und bei swisstopo/BAZL abklären.
 
 ## Wetterdaten
 

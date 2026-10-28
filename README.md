@@ -7,8 +7,8 @@ Neuaufbau von [gkg.ch](https://www.gkg.ch/) für den **Gleitschirmklub Glarnerla
 | | |
 | --- | --- |
 | Phase | 1 – Design und Prototyp. Noch kein Code der eigentlichen Website. |
-| Fertig | Design-System (Farben, Schrift, Abstände, 12 Komponenten mit Vorschau), Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) |
-| Als Nächstes | Prototyp mit dem Vorstand testen, offene Fragen klären, Export aus der heutigen Seite (vermutlich ClubDesk), Logo als SVG |
+| Fertig | Design-System mit Klub-Logos, Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) mit 3D-Karte der 15 Start- und Landeplätze |
+| Als Nächstes | Koordinaten mit dem Ressort Fluggebiete bestätigen, Palette ans Logo-Gelb anpassen (Entscheid offen), Prototyp mit dem Vorstand testen, Logo als Vektordatei |
 
 Den vollständigen Plan mit Zeitplan und offenen Fragen findest du in [design-system/Projektplan.md](design-system/Projektplan.md), den technischen Vorschlag in [design-system/Technik.md](design-system/Technik.md).
 
@@ -27,12 +27,17 @@ design-system/          Das Design-System – 1:1 dieselben Dateien wie im Artif
     index.d.ts          Typen der Komponenten (Dokumentation)
     <Name>/README.md    Richtlinien pro Komponente
     <Name>/preview.html Live-Vorschau pro Komponente
+  assets/Logos/         G-Signet und Sonnen-Logo (freigestellt), Originale in original/
     Cover/preview.html  Titelbild des Design-Systems
 prototype/              Klickbarer Prototyp: Start, Fluggebiete, Jahreskarte, Kontrolle, Shop
 docs/
   Quellen.md            Woher die Inhalte stammen (gkg.ch, FlyCard Bassano)
 tools/
   tokens-css.js         Erzeugt CSS-Variablen aus tokens.json
+  build-tiles.py        Höhendaten laden, Relief- und Höhenkacheln für die 3D-Karte rechnen
+  prepare-logos.py      Klub-Logos freistellen (weisser Grund → transparent)
+  render-map-poster.js  Standbild der 3D-Karte rendern
+  serve.js              Lokaler Server für den Prototyp
   render-previews.js    Rendert alle Komponenten-Vorschauen hell und dunkel als Bild
   build-prototype.js    Baut den Prototyp nach build/prototype/
   check-prototype.js    Prüft alle Seiten des Prototyps und spielt den Kauf durch
@@ -63,12 +68,14 @@ Voraussetzung: Node.js 18 oder neuer.
 ```bash
 npm install
 npx playwright install chromium   # nur beim ersten Mal, falls noch kein Browser installiert ist
+pip install -r tools/requirements.txt   # numpy und Pillow für Kacheln und Logos
+npm run tiles       # einmalig: Kartenkacheln rechnen (build/tiles/)
 npm run previews    # alle Komponenten hell und dunkel als Bild nach build/previews/
-npm run prototype   # Prototyp nach build/prototype/ bauen, dann index.html öffnen
-npm run check       # Prototyp bauen und prüfen (Fehler, Überlauf, Kaufablauf)
+npm run serve       # Prototyp bauen und auf http://localhost:8080 starten
+npm run check       # Prototyp bauen und prüfen (Fehler, Überlauf, Kaufablauf, 3D-Karte)
 ```
 
-Alle drei Befehle brechen mit Fehlercode ab, wenn etwas nicht stimmt.
+`previews` und `check` brechen mit Fehlercode ab, wenn etwas nicht stimmt.
 
 ## Design-System-Artifact
 

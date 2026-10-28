@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { start } = require('./serve');
 
 const root = path.resolve(__dirname, '..');
 const page0 = path.join(root, 'build', 'prototype', 'index.html');
@@ -17,9 +18,13 @@ const LIBS = {
   'react/18.3.1/umd/react.production.min.js': 'react/umd/react.production.min.js',
   'react-dom/18.3.1/umd/react-dom.production.min.js': 'react-dom/umd/react-dom.production.min.js'
 };
+const MAPLIBRE = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js';
+const PORT = 8173;
+const BASE = `http://127.0.0.1:${PORT}/index.html`;
 
 async function open(browser, vp, scheme) {
   const ctx = await browser.newContext({ viewport: VIEWPORTS[vp], colorScheme: scheme });
+  await ctx.route(MAPLIBRE, route => route.fulfill({ path: path.join(root, 'node_modules', 'maplibre-gl', 'dist', 'maplibre-gl.js'), contentType: 'text/javascript' }));
   await ctx.route('https://cdnjs.cloudflare.com/ajax/libs/**', route => {
     const key = Object.keys(LIBS).find(k => route.request().url().endsWith(k));
     if (!key) return route.abort();
@@ -33,7 +38,8 @@ async function open(browser, vp, scheme) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const server = await start(path.dirname(page0), PORT);
+  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   let problems = 0;
   for (const vp of Object.keys(VIEWPORTS)) {
     for (const scheme of ['light', 'dark']) {
@@ -41,7 +47,7 @@ async function open(browser, vp, scheme) {
       for (const r of ROUTES) {
         errors.length = 0;
         await page.goto('about:blank');
-        await page.goto('file://' + page0 + '#' + r);
+        await page.goto(BASE + '#' + r);
         await page.waitForTimeout(600);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         if (scheme === 'light' || r === 'start') await page.screenshot({ path: path.join(shots, `${r}.${vp}.${scheme}.png`), fullPage: true });
@@ -55,7 +61,7 @@ async function open(browser, vp, scheme) {
 
   // Kaufablauf einmal durchspielen (Handy, hell)
   const { ctx, page, errors } = await open(browser, 'phone', 'light');
-  await page.goto('file://' + page0 + '#jahreskarte');
+  await page.goto(BASE + '#jahreskarte');
   await page.getByRole('button', { name: 'Jahreskarte kaufen' }).click();
   await page.fill('#f-first', 'Reto');
   await page.fill('#f-last', 'Test');
@@ -72,7 +78,7 @@ async function open(browser, vp, scheme) {
   await page.getByRole('button', { name: 'Scan simulieren: gültige Karte' }).click();
   const scanned = await page.locator('.pt-result .pt-h3').textContent();
   await page.screenshot({ path: path.join(shots, 'flow-kontrolle.phone.png'), fullPage: true });
-  await page.goto('file://' + page0 + '#start');
+  await page.goto(BASE + '#start');
   await page.getByRole('button', { name: 'Menü' }).click();
   const menuVisible = await page.getByRole('link', { name: 'Wetter' }).isVisible();
   await page.screenshot({ path: path.join(shots, 'flow-menue.phone.png') });
@@ -80,7 +86,34 @@ async function open(browser, vp, scheme) {
   if (!flowOk) problems++;
   console.log(`\nKaufablauf: ${flowOk ? 'ok' : 'PROBLEM'} (Pflichtfeld-Prüfung ${blocked > 0 ? 'greift' : 'fehlt'}, Karte für «${holder}», Kontrolle zeigt «${scanned}», Handy-Menü ${menuVisible ? 'öffnet' : 'öffnet nicht'}${errors.length ? ', Fehler: ' + errors.join(' | ') : ''})`);
   await ctx.close();
+
+  // 3D-Karte: lädt im Browser, zeigt alle Plätze, ein Tipp auf einen Marker füllt das Infopanel
+  const expected = (fs.readFileSync(path.join(root, 'prototype', 'data.js'), 'utf8').match(/kind: '(start|landing)'/g) || []).length;
+  for (const [vp, scheme] of [['desktop', 'light'], ['phone', 'light'], ['desktop', 'dark']]) {
+    const m = await open(browser, vp, scheme);
+    const t0 = Date.now();
+    await m.page.goto(BASE + '#fluggebiete');
+    const ready = await m.page.waitForSelector('.pt-map3d-tools', { timeout: 60000 }).then(() => true, () => false);
+    const loadMs = Date.now() - t0;
+    await m.page.waitForTimeout(5000);
+    const markers = await m.page.locator('.pt-mk').count();
+    await m.page.screenshot({ path: path.join(shots, `karte.${vp}.${scheme}.png`) });
+    let picked = null;
+    if (ready) {
+      await m.page.locator('.pt-mk', { hasText: 'Hüsliberg' }).first().click();
+      await m.page.waitForTimeout(3500);
+      picked = await m.page.locator('.pt-sitepanel .gkg-title').first().textContent().catch(() => null);
+      await m.page.screenshot({ path: path.join(shots, `karte-auswahl.${vp}.${scheme}.png`) });
+    }
+    const overflow = await m.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const ok = ready && markers === expected && picked === 'Hüsliberg' && overflow <= 0 && !m.errors.length;
+    if (!ok) problems++;
+    console.log(`3D-Karte ${vp.padEnd(7)} ${scheme.padEnd(5)} ${ok ? 'ok' : 'PROBLEM'} (bereit ${ready ? 'nach ' + (loadMs / 1000).toFixed(1) + ' s' : 'NEIN'}, ${markers}/${expected} Marker, Auswahl «${picked}»${overflow > 0 ? ', ' + overflow + 'px zu breit' : ''}${m.errors.length ? ', Fehler: ' + m.errors.slice(0, 3).join(' | ') : ''})`);
+    await m.ctx.close();
+  }
+
   await browser.close();
+  server.close();
   console.log(`Bildschirmfotos in ${path.relative(root, shots)}/`);
   process.exit(problems ? 1 : 0);
 })();

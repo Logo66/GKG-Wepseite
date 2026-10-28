@@ -2,7 +2,7 @@ import type * as React from 'react';
 
 export type Status = 'go' | 'caution' | 'stop';
 
-export interface SiteHeaderProps { clubName?: string; items: { label: string; href?: string }[]; active?: string; cta?: string; ctaHref?: string; loginHref?: string; homeHref?: string }
+export interface SiteHeaderProps { /** URL of the club signet; shown on a white disc (logo-ground) */ logoSrc?: string; clubName?: string; items: { label: string; href?: string }[]; active?: string; cta?: string; ctaHref?: string; loginHref?: string; homeHref?: string }
 export declare function SiteHeader(props: SiteHeaderProps): React.ReactElement;
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> { variant?: 'primary' | 'wing' | 'quiet' | 'ghost'; size?: 'md' | 'lg'; href?: string; icon?: 'check' | 'alert' | 'cross' | 'arrow' | 'wing' }
@@ -17,13 +17,13 @@ export declare function WeatherCard(props: WeatherCardProps): React.ReactElement
 export interface SpotCardProps { name: string; region?: string; /** omitted values are left out, never guessed */ takeoff?: string | number; landing?: string | number; directions?: ('N' | 'NO' | 'O' | 'SO' | 'S' | 'SW' | 'W' | 'NW')[]; level?: 'Einsteiger' | 'Fortgeschritten' | 'Profi'; note?: string; status?: Status; /** e.g. 'Alpbetrieb' instead of the default word */ statusLabel?: string; href?: string; cta?: string; /** no routeHref = no Route button */ routeHref?: string }
 export declare function SpotCard(props: SpotCardProps): React.ReactElement;
 
-export interface SpotMarkerProps { label: string; status: Status; active?: boolean; onClick?: () => void }
+export interface SpotMarkerProps { label: string; status?: Status; /** omitted = a whole flying area; 'landing' draws a round landing marker */ kind?: 'start' | 'landing'; active?: boolean; className?: string; onClick?: () => void; onFocus?: () => void }
 export declare function SpotMarker(props: SpotMarkerProps): React.ReactElement;
 
 export interface BuyBoxProps { title?: string; price: number; currency?: string; per?: string; perks?: React.ReactNode[]; methods?: string[]; cta?: string; badge?: string; /** one line under the payment methods, e.g. the membership hint */ note?: React.ReactNode; onBuy?: () => void }
 export declare function BuyBox(props: BuyBoxProps): React.ReactElement;
 
-export interface PassCardProps { holder: string; /** portrait URL; omitted = initials */ photo?: string; season: string; number: string; kind?: string; fields?: [string, string][]; /** the real QR element from the backend; omitted = a sample pattern */ qr?: React.ReactNode; hint?: string; wallet?: boolean; onAppleWallet?: () => void; onGoogleWallet?: () => void }
+export interface PassCardProps { /** URL of the club signet for the pass header */ logoSrc?: string; holder: string; /** portrait URL; omitted = initials */ photo?: string; season: string; number: string; kind?: string; fields?: [string, string][]; /** the real QR element from the backend; omitted = a sample pattern */ qr?: React.ReactNode; hint?: string; wallet?: boolean; onAppleWallet?: () => void; onGoogleWallet?: () => void }
 export declare function PassCard(props: PassCardProps): React.ReactElement;
 
 export interface ListingCardProps { category: string; title: string; price: number; tags?: string[]; seller?: string; posted?: string; image?: string; imageAlt?: string; isNew?: boolean }

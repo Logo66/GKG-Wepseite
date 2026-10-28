@@ -17,6 +17,11 @@ const css = buildTokensCss(path.join(ds, 'tokens.json'), 'attribute');
 const tokensCss = path.join(root, 'build', 'tokens.css');
 fs.writeFileSync(tokensCss, css);
 
+// Uploads im Artifact (/_blob/<id>) lokal auf die Dateien unter design-system/assets/ abbilden
+const index = JSON.parse(fs.readFileSync(path.join(ds, 'design-system.json'), 'utf8'));
+const blobs = {};
+Object.entries(index.assetGroups || {}).forEach(([group, g]) => Object.values(g.files || {}).forEach(f => { blobs[f.blob] = path.join(ds, 'assets', group, f.name); }));
+
 const nm = path.join(root, 'node_modules');
 const inject =
   `<link rel="stylesheet" href="file://${tokensCss}">` +
@@ -36,7 +41,7 @@ const inject =
     const height = +(/height=(\d+)/.exec(marker) || [0, 200])[1];
     const width = +(/width=(\d+)/.exec(marker) || [0, 960])[1];
     for (const th of themes) {
-      const html = src.replace(/<html([^>]*)>/, `<html$1 data-theme="${th}">`).replace('<head>', '<head>' + inject);
+      const html = src.replace(/<html([^>]*)>/, `<html$1 data-theme="${th}">`).replace('<head>', '<head>' + inject).replace(/\/_blob\/([0-9a-f]{32})/g, (m, id) => blobs[id] ? 'file://' + blobs[id] : m);
       const file = path.join(out, `${name}.${th}.html`);
       fs.writeFileSync(file, html);
       const page = await browser.newPage({ viewport: { width, height } });

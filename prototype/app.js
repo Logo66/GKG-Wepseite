@@ -136,13 +136,16 @@
           }))),
 
       h(Section, { id: 'klub', title: 'Seit 1987 in der Luft', sub: 'Ein Klub für alle, die fliegen – vom ersten Höhenflug bis zum Streckenflug.' },
+        h('div', { className: 'pt-split pt-split-rev' },
+        h('div', { className: 'pt-logo-tile' }, h('img', { src: 'ds/logos/gkg-sonne-bogen.png', alt: 'Logo Gleitschirmklub Glarnerland: Sonne aus sieben Gleitschirmen mit www.gkg.ch', width: 585, height: 540 })),
+        h('div', null,
         h('dl', { className: 'pt-facts' },
           h('div', null, h('dt', null, '185 Mitglieder'), h('dd', null, 'Einer der grössten Gleitschirmklubs der Ostschweiz')),
           h('div', null, h('dt', null, 'GKG-Cup'), h('dd', null, 'Interner Streckenflug-Wettbewerb seit 2019')),
           h('div', null, h('dt', null, 'Kursbeiträge'), h('dd', null, 'Der Klub zahlt an SHV-Kurse und Sicherheitstrainings'))),
         h('div', { className: 'pt-actions', style: { marginTop: 'var(--space-8)' } },
           h(G.Button, { variant: 'primary', href: '#verein' }, 'Mitglied werden'),
-          h(G.Button, { variant: 'quiet', href: '#sport' }, 'Sport & GKG-Cup'))),
+          h(G.Button, { variant: 'quiet', href: '#sport' }, 'Sport & GKG-Cup'))))),
 
       h(Section, { id: 'kollektion', title: 'Klub-Kollektion', sub: 'Kleider mit Klub-Logo. Sortiment und Preise sind Beispiele.', aside: h('a', { href: '#shop', className: 'pt-small' }, 'Zum Shop') },
         h('div', { className: 'pt-grid' },
@@ -171,22 +174,147 @@
   }
 
   function spotProps(a) {
-    var takeoff = a.starts ? null : a.takeoff;
-    return { name: a.name, region: a.region, status: a.status, statusLabel: a.statusLabel, note: a.note, takeoff: takeoff, href: '#gebiet-' + a.id };
+    return { name: a.name, region: a.region, status: a.status, statusLabel: a.statusLabel, note: a.note, href: '#gebiet-' + a.id };
+  }
+
+  function siteById(id) { return D.sites.filter(function (x) { return x.id === id; })[0]; }
+  function sitesOf(areaId) { return D.sites.filter(function (x) { return x.areas.indexOf(areaId) >= 0; }); }
+  function fmtAlt(m) { return String(m).replace(/\B(?=(\d{3})+(?!\d))/g, "'"); }
+  function lv95(x) { var c = window.GKGMap.toLV95(x.lat, x.lon); return fmtAlt(c[0]) + ' / ' + fmtAlt(c[1]); }
+
+  function renderMarker(el, site, active, onSelect) {
+    if (!el._root) el._root = ReactDOM.createRoot(el);
+    var area = areaById(site.areas[0]);
+    el._root.render(h(G.SpotMarker, {
+      label: site.name, kind: site.kind, status: site.kind === 'start' ? area.status : undefined, active: active,
+      onClick: function (e) { e.stopPropagation(); onSelect(site.id); }
+    }));
+  }
+
+  // Die 3D-Karte: lädt MapLibre erst hier, zeigt bis dahin ein Standbild bzw. bei Fehlern das Schema
+  function Map3D(p) {
+    var ref = React.useRef(null), apiRef = React.useRef(null);
+    var st = useState('loading'), state = st[0], setState = st[1];
+    var er = useState(''), err = er[0], setErr = er[1];
+    var tr = useState(true), terrain = tr[0], setTerrain = tr[1];
+    useEffect(function () {
+      var alive = true;
+      window.GKGMap.create(ref.current, {
+        sites: D.sites, focusArea: p.focusArea,
+        renderMarker: function (el, site, active) { renderMarker(el, site, active, p.onSelect); }
+      }).then(function (api) {
+        if (!alive) { api.destroy(); return; }
+        apiRef.current = api;
+        if (p.apiRef) p.apiRef.current = api;
+        setState('ready');
+      }, function (e) { if (alive) { setErr(e && e.message ? e.message : String(e)); setState('error'); } });
+      return function () {
+        alive = false;
+        if (apiRef.current) apiRef.current.destroy();
+        apiRef.current = null;
+        if (p.apiRef) p.apiRef.current = null;
+      };
+    }, []);
+    useEffect(function () { if (state === 'ready' && p.selected) apiRef.current.select(p.selected); }, [p.selected, state]);
+    function toggle() { var on = !terrain; setTerrain(on); apiRef.current.setTerrain(on); }
+    return h('div', { className: 'pt-map3d-shell' + (p.compact ? ' is-compact' : '') },
+      h('div', { className: 'pt-map3d', ref: ref, role: 'region', 'aria-label': p.label || '3D-Karte der Start- und Landeplätze' }),
+      state !== 'ready' && h('div', { className: 'pt-map3d-cover' + (state === 'error' ? ' is-error' : '') },
+        state === 'loading' && !p.compact && h('picture', { 'aria-hidden': true },
+          h('source', { srcSet: 'map-poster-dark.jpg', media: '(prefers-color-scheme: dark)' }),
+          h('img', { src: 'map-poster.jpg', alt: '', onError: function (e) { e.currentTarget.hidden = true; } })),
+        state === 'loading'
+          ? h('p', { className: 'pt-map3d-msg', role: 'status' }, '3D-Karte wird geladen …')
+          : h('div', { className: 'pt-map3d-fallback' },
+              h('p', { className: 'pt-map3d-msg', role: 'alert' }, err + ' Hier das Schema der Gebiete:'),
+              h(AreaMap, { selected: p.focusArea, onSelect: function (id) { go('gebiet-' + id); } }))),
+      state === 'ready' && h('div', { className: 'pt-map3d-tools' },
+        h(G.Button, { variant: 'quiet', onClick: toggle, 'aria-pressed': terrain }, terrain ? '2D-Ansicht' : '3D-Ansicht'),
+        !p.compact && h(G.Button, { variant: 'quiet', onClick: function () { apiRef.current.overview(); if (p.onOverview) p.onOverview(); } }, 'Übersicht')));
+  }
+
+  function SiteFacts(p) {
+    var x = p.site;
+    return h('dl', { className: 'pt-sitefacts' },
+      h('dt', null, 'Koordinaten'), h('dd', null, x.lat.toFixed(5) + ' N, ' + x.lon.toFixed(5) + ' O'),
+      h('dt', null, 'LV95'), h('dd', null, lv95(x)),
+      h('dt', null, 'Quelle'), h('dd', { className: 'pt-dd-text' }, x.srcUrl ? ext(x.srcUrl, x.src) : x.src),
+      x.check && h(Fragment, null, h('dt', null, 'Stand'), h('dd', { className: 'pt-dd-text' }, h(G.FlightStatus, { status: 'caution', label: 'Vom Ressort zu bestätigen' }))));
+  }
+
+  function SitePanel(p) {
+    var x = p.site, area = areaById(x.areas[0]);
+    var region = (x.kind === 'start' ? 'Startplatz' : 'Landeplatz') + ' · ' + x.areas.map(function (id) { return areaById(id).name; }).join(', ');
+    return h('div', { className: 'pt-sitepanel' },
+      h(G.SpotCard, {
+        key: x.id, name: x.name, region: region,
+        status: x.kind === 'start' ? area.status : undefined, statusLabel: x.kind === 'start' ? area.statusLabel : undefined,
+        takeoff: x.kind === 'start' ? fmtAlt(x.alt) : undefined, landing: x.kind === 'landing' ? fmtAlt(x.alt) : undefined,
+        directions: x.dirs, level: undefined, note: x.note,
+        href: '#gebiet-' + x.areas[0], cta: 'Gebiet ' + area.name,
+        routeHref: x.kind === 'landing' ? 'https://www.google.com/maps/dir/?api=1&destination=' + x.lat + ',' + x.lon : undefined
+      }),
+      x.level && h('p', { className: 'pt-small' }, h('b', null, 'Schwierigkeit: '), x.level),
+      h(SiteFacts, { site: x }));
+  }
+
+  function Legend() {
+    return h('ul', { className: 'pt-legend', 'aria-label': 'Legende' },
+      h('li', null, h('span', { className: 'pt-legend-start', 'aria-hidden': true }), 'Startplatz – Farbe zeigt den Flugstatus (Beispiel)'),
+      h('li', null, h('span', { className: 'pt-legend-landing', 'aria-hidden': true }), 'Landeplatz'),
+      h('li', null, 'Gelände 1,3-fach überhöht'));
   }
 
   function Areas() {
-    var s = useState('huesliberg'), selected = s[0], setSelected = s[1];
-    var a = areaById(selected);
+    var s = useState(null), sel = s[0], setSel = s[1];
+    var apiRef = React.useRef(null);
+    var site = sel && sel.type === 'site' ? siteById(sel.id) : null;
+    var area = sel && sel.type === 'area' ? areaById(sel.id) : null;
+    var starts = D.sites.filter(function (x) { return x.kind === 'start'; }).length;
+    var landings = D.sites.length - starts;
+    function pickArea(id) { setSel({ type: 'area', id: id }); if (apiRef.current) apiRef.current.focusArea(id); }
     return h(Fragment, null,
-      h(PageHead, { title: 'Fluggebiete', lead: 'Acht Gebiete, zehn Startplätze. Vor jedem Flug gilt: Gebietsregeln und SHV-Infotafel beachten.' }),
-      h(Wrap, null, h('div', { className: 'pt-map-layout' },
-        h('figure', { className: 'pt-map-figure' },
-          h(AreaMap, { selected: selected, onSelect: setSelected }),
-          h('figcaption', { className: 'pt-small pt-muted' }, 'Schema, nicht massstäblich, Norden oben. Status: Beispiel. Im echten Produkt: swisstopo-Karte.')),
-        h('div', { 'aria-live': 'polite' }, h(G.SpotCard, Object.assign({ key: a.id }, spotProps(a)))))),
+      h(PageHead, { title: 'Fluggebiete', lead: 'Acht Gebiete, ' + starts + ' Startplätze, ' + landings + ' Landeplätze – im Gelände. Vor jedem Flug gilt: Gebietsregeln und SHV-Infotafel beachten.' }),
+      h(Wrap, null,
+        h('div', { className: 'pt-chips', role: 'group', 'aria-label': 'Gebiet auf der Karte zeigen' },
+          D.areas.map(function (a) {
+            return h('button', { key: a.id, type: 'button', className: 'pt-tab', 'aria-pressed': !!(area && area.id === a.id), onClick: function () { pickArea(a.id); } }, a.name);
+          })),
+        h('div', { className: 'pt-map-layout' },
+          h('div', null,
+            h(Map3D, { apiRef: apiRef, selected: site ? site.id : null, onSelect: function (id) { setSel({ type: 'site', id: id }); }, onOverview: function () { setSel(null); } }),
+            h(Legend)),
+          h('div', { 'aria-live': 'polite' },
+            site ? h(SitePanel, { site: site })
+              : area ? h(Fragment, null,
+                  h(G.SpotCard, Object.assign({ key: area.id }, spotProps(area))),
+                  h('ul', { className: 'pt-sitelist' }, sitesOf(area.id).map(function (x) {
+                    return h('li', { key: x.id }, h('button', { type: 'button', onClick: function () { setSel({ type: 'site', id: x.id }); } },
+                      h('span', null, x.name), h('span', { className: 'pt-muted' }, (x.kind === 'start' ? 'Start' : 'Landung') + ' · ' + fmtAlt(x.alt) + ' m')));
+                  })))
+              : h('div', { className: 'pt-panel' },
+                  h('h2', null, 'Start- und Landeplätze'),
+                  h('p', null, 'Tippe auf einen Tropfen (Startplatz) oder einen Kreis (Landeplatz), oder wähle oben ein Gebiet.'),
+                  h('p', { className: 'pt-small pt-muted' }, 'Verschieben mit einem Finger bzw. der Maus, drehen und neigen mit zwei Fingern oder mit rechter Maustaste.')))),
+        h('p', { className: 'pt-source' }, 'Koordinaten aus den SHV-Infotafeln, der DHV-Geländedatenbank, Paragliding365 und braunwald.ch, jeweils gegen das Höhenmodell geprüft. Plätze mit Hinweis «Vom Ressort zu bestätigen» sind unsicher. Relief aus offenen Höhendaten (Terrain Tiles, u. a. EU-DEM © Copernicus); im Live-Betrieb ist das swisstopo-Luftbild vorgesehen.')),
       h(Section, { id: 'alle', title: 'Alle Gebiete' },
         h('div', { className: 'pt-grid' }, D.areas.map(function (x) { return h(G.SpotCard, Object.assign({ key: x.id }, spotProps(x))); }))));
+  }
+
+  function SiteTable(p) {
+    return h('div', { className: 'pt-table-wrap' }, h('table', { className: 'pt-table' },
+      h('thead', null, h('tr', null,
+        h('th', { scope: 'col' }, 'Platz'), h('th', { scope: 'col', className: 'num' }, 'Höhe'), h('th', { scope: 'col' }, 'Startrichtung'), h('th', { scope: 'col', className: 'num' }, 'LV95'))),
+      h('tbody', null, p.sites.map(function (x) {
+        return h('tr', { key: x.id },
+          h('td', { className: 'pt-site-cell' },
+            h('b', null, x.name),
+            h('span', { className: 'pt-small pt-muted' }, (x.kind === 'start' ? 'Startplatz' : 'Landeplatz') + ' · Quelle: ', x.srcUrl ? ext(x.srcUrl, x.src) : x.src),
+            x.check && h('span', null, h(G.FlightStatus, { status: 'caution', label: 'Zu bestätigen' }))),
+          h('td', { className: 'num' }, fmtAlt(x.alt) + ' m'),
+          h('td', null, x.kind === 'start' ? (x.dirs.length ? x.dirs.join(', ') : 'folgt') : '–'),
+          h('td', { className: 'num' }, lv95(x)));
+      }))));
   }
 
   function AreaDetail(p) {
@@ -198,11 +326,17 @@
         h('div', { className: 'pt-actions', style: { marginTop: 'var(--space-4)' } },
           h(G.FlightStatus, { status: a.status, label: a.statusLabel }),
           h('span', { className: 'pt-small pt-muted' }, 'Status: Beispiel'))),
-      h(Wrap, null, h('div', { className: 'pt-detail' },
+      h(Wrap, null,
+        h('div', { className: 'pt-detail-map' },
+          h(Map3D, { compact: true, focusArea: a.id, label: '3D-Karte ' + a.name, onSelect: function () {} })),
+        h('div', { className: 'pt-detail' },
         h('div', null,
-          a.missing && h('div', { className: 'pt-panel' }, h('h2', null, 'Inhalte folgen'), h('p', null, 'Für dieses Gebiet waren auf gkg.ch keine Details lesbar. Das Ressort Fluggebiete ergänzt Startplatz, Landeplatz und Regeln.')),
+          h('div', { className: 'pt-block' },
+            h('h2', null, 'Start- und Landeplätze'),
+            h(SiteTable, { sites: sitesOf(a.id) })),
+          a.missing && h('div', { className: 'pt-panel pt-block' }, h('h2', null, 'Inhalte folgen'), h('p', null, 'Für dieses Gebiet waren auf gkg.ch keine Details lesbar. Das Ressort Fluggebiete ergänzt Zugang und Regeln.')),
           a.starts && h('div', { className: 'pt-block' },
-            h('h2', null, 'Startplätze'),
+            h('h2', null, 'Startplätze im Detail'),
             h('div', { className: 'pt-starts' }, a.starts.map(function (st) {
               return h('section', { key: st.name, className: 'pt-start' },
                 h('h3', null, st.name, st.takeoff && h('span', null, st.takeoff + ' m ü. M.')),
@@ -213,7 +347,7 @@
           h(Block, { title: 'Regeln', items: a.rules }),
           h(Block, { title: 'Gefahren', items: a.hazards, warn: true }),
           h(Block, { title: 'Gut zu wissen', items: a.extras }),
-          h('p', { className: 'pt-source' }, 'Inhalte aus gkg.ch übernommen (Stand 2025). Vor dem Go-Live prüft das Ressort Fluggebiete alle Angaben und ergänzt Koordinaten, Höhen und Windrichtungen.')),
+          h('p', { className: 'pt-source' }, 'Gebietstexte aus gkg.ch (Stand 2025). Koordinaten aus SHV-Infotafeln, DHV und Paragliding365, gegen das Höhenmodell geprüft. Vor dem Go-Live bestätigt das Ressort Fluggebiete alle Angaben.')),
         h('aside', { className: 'pt-aside' },
           notices.length > 0 && h('div', { className: 'pt-panel' }, h('h2', null, 'Aktuelle Meldung'), h(NoticeList, { items: notices })),
           h('div', { className: 'pt-panel' },
@@ -411,7 +545,7 @@
     var c = p.card;
     return h('div', { className: 'pt-done' },
       h(G.PassCard, {
-        holder: c.holder, photo: c.photo, kind: 'Start- & Landeplatz', season: 'Jahreskarte ' + D.season, number: c.number,
+        logoSrc: 'ds/logos/gkg-signet.png', holder: c.holder, photo: c.photo, kind: 'Start- & Landeplatz', season: 'Jahreskarte ' + D.season, number: c.number,
         fields: [['Gültig', 'Saison ' + D.season], ['Kartennr.', c.number], ['Typ', c.kind], ['Bezahlt', 'CHF ' + chf(D.price) + ' · ' + c.method]],
         onAppleWallet: function () { p.notify('Apple Wallet ist im Prototyp nicht verbunden.'); },
         onGoogleWallet: function () { p.notify('Google Wallet ist im Prototyp nicht verbunden.'); }
@@ -543,7 +677,9 @@
   /* ---------- Frame ---------- */
   function Footer() {
     return h('footer', { className: 'pt-footer' }, h('div', { className: 'pt-wrap' },
-      h('div', null, h('p', null, h('b', null, 'GKG')), h('p', null, 'Gleitschirmklub Glarnerland'), h('p', { className: 'pt-muted' }, 'info@gkg.ch')),
+      h('div', null,
+        h('div', { className: 'pt-logo-tile pt-logo-tile-sm' }, h('img', { src: 'ds/logos/gkg-sonne-text.png', alt: 'Logo Gleitschirmklub Glarnerland: Sonne aus sieben Gleitschirmen', width: 426, height: 580 })),
+        h('p', { className: 'pt-muted', style: { marginTop: 'var(--space-3)' } }, 'info@gkg.ch')),
       h('nav', { 'aria-label': 'Fusszeile' }, h('h2', null, 'Klub'), h('ul', { className: 'pt-links' },
         h('li', null, h('a', { href: '#verein' }, 'Verein & Mitgliedschaft')),
         h('li', null, h('a', { href: '#sport' }, 'Sport & GKG-Cup')),
@@ -595,7 +731,7 @@
 
     return h(Fragment, null,
       h('div', { className: 'pt-ribbon' }, h(Wrap, null, h('b', null, 'Prototyp'), ' · Klickbar, aber nicht verbunden. Wetter, Status, Preise und Inserate sind Beispieldaten.')),
-      h('div', { className: 'pt-header' }, h(G.SiteHeader, { clubName: 'Gleitschirmklub Glarnerland', items: NAV, active: activeLabel(route), homeHref: '#start', loginHref: '#login', ctaHref: '#jahreskarte', cta: 'Jahreskarte' })),
+      h('div', { className: 'pt-header' }, h(G.SiteHeader, { logoSrc: 'ds/logos/gkg-signet.png', clubName: 'Gleitschirmklub Glarnerland', items: NAV, active: activeLabel(route), homeHref: '#start', loginHref: '#login', ctaHref: '#jahreskarte', cta: 'Jahreskarte' })),
       h('main', { key: route }, page),
       h(Footer),
       toast && h('div', { className: 'pt-toast', role: 'status', key: toast.at }, toast.msg));

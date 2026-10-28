@@ -62,8 +62,10 @@ GKG ist der Auftritt des Gleitschirmklubs Glarnerland im Netz – seit 1987 eine
 
 ## Logo
 
-- Das bestehende Logo von gkg.ch ist **noch nicht übernommen**: Die Texte der Seite liessen sich lesen, die Bilddateien nicht. Bis das Logo als Vektordatei (SVG) vorliegt, steht die Wortmarke «GKG» in `display` (Bricolage Grotesque, Gewicht 800) mit «Gleitschirmklub Glarnerland» in `label` daneben.
-- Das Logo kommt als Asset-Gruppe «Logos» in dieses System, sobald es vorliegt – nie nachzeichnen. Für die Klub-Kollektion braucht es zusätzlich eine einfarbige Version für Druck und Stickerei.
+- Der Klub hat zwei Logos (Asset-Gruppe «Logos»): das **G-Signet** in Gelb `#ebc53b` und Anthrazit `#201f1f` und die **Sonne aus sieben Gleitschirmen** in Gelb `#ffd900` und Schwarz, mit www.gkg.ch in Türkis `#27cfcf`.
+- Das Signet steht in der Kopfzeile und im Wallet-Pass, immer auf der weissen Scheibe `logo-ground`, neben der Wortmarke «GKG» in `display`. Das Sonnen-Logo trägt die Startseite und die Fusszeile, ebenfalls auf `logo-ground`.
+- Nie nachzeichnen, umfärben oder verzerren. Die Logos liegen nur als Rasterbilder vor; für Druck und Stickerei der Klub-Kollektion braucht es Vektordateien.
+- Offen: Ob die Palette näher an das Logo-Gelb rückt, entscheidet der Vorstand. Bis dahin bleibt `sky` die Primärfarbe; das Türkis von www.gkg.ch liegt bereits nahe daran.
 
 ## Bewegung
 
