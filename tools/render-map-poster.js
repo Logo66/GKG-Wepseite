@@ -27,7 +27,7 @@ const LIBS = {
     await page.goto(`http://127.0.0.1:${PORT}/index.html#fluggebiete`);
     await page.waitForSelector('.pt-map3d-tools', { timeout: 60000 });
     await page.waitForTimeout(8000);
-    await page.addStyleTag({ content: '.pt-mk, .maplibregl-control-container, .pt-map3d-tools { display: none !important; }' });
+    await page.addStyleTag({ content: '.pt-mk, .pt-wx, .pt-lb, .maplibregl-control-container, .pt-map3d-tools { display: none !important; }' });
     await page.waitForTimeout(300);
     const file = path.join(root, 'prototype', scheme === 'dark' ? 'map-poster-dark.jpg' : 'map-poster.jpg');
     await page.locator('.pt-map3d').screenshot({ path: file, type: 'jpeg', quality: 72 });

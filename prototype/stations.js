@@ -2,9 +2,10 @@
 //   GET /api/v1/weather/stations?lat=&lon=&radius_km=&sources=fanet,holfuy,swissmetnet
 //   → { stations: [{ id, source, name, lat, lon, alt_m, wind_dir_deg, wind_speed_ms, gust_ms,
 //                    temp_c, humidity_pct, pressure_hpa, age_s, timestamp }], meta: { count, bbox, fetched_at } }
-// Der Server erlaubt Browser-Anfragen nur von freigegebenen Adressen (CORS_EXTRA_ORIGIN) –
-// im Live-Betrieb holt deshalb das GKG-Backend die Daten und gibt sie zwischengespeichert weiter.
-// Ist der Dienst nicht erreichbar (z. B. im Artifact), erscheinen Beispielwerte, klar markiert.
+// Live-Betrieb: Das GKG-Backend (backend/wetter.js) holt die Daten serverseitig und gibt sie zwischengespeichert
+// unter /api/wetter/stationen weiter – GKG_CONFIG.weatherUrl zeigt dorthin (lokal: npm run serve).
+// Ohne Backend versucht der Prototyp es direkt bei flightbuddyki.ch; der Server erlaubt Browser-Anfragen
+// aber nur von freigegebenen Adressen. Ist nichts erreichbar (z. B. im Artifact), erscheinen Beispielwerte, klar markiert.
 window.GKGStations = (function () {
   var DEFAULT_API = 'https://flightbuddyki.ch';
   var CENTER = { lat: 47.06, lon: 9.07 };
@@ -28,8 +29,10 @@ window.GKGStations = (function () {
 
   var cache = null, pending = null, listeners = [];
 
+  function cfg() { return window.GKG_CONFIG || {}; }
   function api() { return String(window.GKG_WEATHER_API || DEFAULT_API).replace(/\/$/, ''); }
   function url() {
+    if (cfg().weatherUrl) return cfg().weatherUrl;
     return api() + '/api/v1/weather/stations?lat=' + CENTER.lat + '&lon=' + CENTER.lon + '&radius_km=' + RADIUS_KM + '&sources=fanet,holfuy,swissmetnet&min_age_s=3600';
   }
   function kmh(ms) { return ms == null ? null : Math.round(ms * 3.6); }
@@ -77,7 +80,8 @@ window.GKGStations = (function () {
       .then(function (d) {
         var list = (d && d.stations || []).filter(function (s) { return typeof s.lat === 'number' && typeof s.lon === 'number'; });
         if (!list.length) return sample('flightbuddyki.ch meldet keine Station in der Region');
-        return { live: true, fetchedAt: d.meta && d.meta.fetched_at, stations: list.map(function (s) { return normalise(s, true); }) };
+        // stale: Das Backend konnte flightbuddyki.ch nicht erreichen und zeigt die letzten Werte
+        return { live: true, stale: !!(d.meta && d.meta.stale), fetchedAt: d.meta && d.meta.fetched_at, stations: list.map(function (s) { return normalise(s, true); }) };
       })
       .catch(function (e) { return sample(e && e.name === 'AbortError' ? 'Zeitüberschreitung' : 'nicht erreichbar'); })
       .then(function (res) {

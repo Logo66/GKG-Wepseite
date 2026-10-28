@@ -1,0 +1,17 @@
+{
+  "_hinweis": "Erzeugt von tools/export-spots.js. Spot-IDs sind ein Vorschlag – gelten erst, wenn FlightBuddyKI die Plätze so angelegt hat.",
+  "attribution": "Prognose: FlightBuddyKI · Wetterdaten ICON-D2 via Open-Meteo (CC BY 4.0)",
+  "spots": {
+    "froni": "gkg-froni",
+    "froni-winter": "gkg-froni-winter",
+    "kerenzer": "gkg-kerenzer",
+    "huesliberg": "gkg-huesliberg",
+    "altwis": "gkg-altwis",
+    "bogmen": "gkg-bogmen",
+    "hirzli": "gkg-hirzli",
+    "kiosk": "gkg-kiosk",
+    "gumen": "gkg-gumen",
+    "gumengrat": "gkg-gumengrat",
+    "aempaechli": "gkg-aempaechli"
+  }
+}

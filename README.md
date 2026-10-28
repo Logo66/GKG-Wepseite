@@ -7,8 +7,8 @@ Neuaufbau von [gkg.ch](https://www.gkg.ch/) für den **Gleitschirmklub Glarnerla
 | | |
 | --- | --- |
 | Phase | 1 – Design und Prototyp. Noch kein Code der eigentlichen Website. |
-| Fertig | Design-System in den Logo-Farben (Sonnen-Gelb, Türkis), Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) mit 3D-Karte der 15 Start- und Landeplätze, Windstationen von flightbuddyki.ch, Pop-up mit SHV-Infotafel, Verwaltung mit Buchhaltung und Ressort-Rechten, «Mein GKG» für die Mitglieder |
-| Als Nächstes | Koordinaten und SHV-Auszüge mit dem Ressort Fluggebiete bestätigen, Weg für die Wetterdaten wählen (GKG-Backend oder Freigabe auf dem BuddyServer), Rechte-Matrix und Kontenplan mit Vorstand und Kasse durchgehen, Prototyp mit dem Vorstand testen, Logo als Vektordatei |
+| Fertig | Design-System in den Logo-Farben (Sonnen-Gelb, Türkis), Projektplan, Technik-Konzept, [klickbarer Prototyp](prototype/README.md) mit 3D-Karte der 15 Start- und Landeplätze, Windstationen von flightbuddyki.ch über eigenen Wetter-Proxy (`backend/`), Pop-up mit SHV-Infotafel, scharfe Karte mit Ortsnamen, Strassen, Wegen, Seilbahnen und Höhenlinien, Routenplaner mit Hike-&-Fly-Routen, Option Prognosen von FlightBuddyKI, Verwaltung mit Buchhaltung und Ressort-Rechten, «Mein GKG» für die Mitglieder |
+| Als Nächstes | Koordinaten und SHV-Auszüge mit dem Ressort Fluggebiete bestätigen, Angebot für die Prognosen von FlightBuddyKI einholen und im Vorstand entscheiden, Rechte-Matrix und Kontenplan mit Vorstand und Kasse durchgehen, Prototyp mit dem Vorstand testen, Logo als Vektordatei |
 
 Den vollständigen Plan mit Zeitplan und offenen Fragen findest du in [design-system/Projektplan.md](design-system/Projektplan.md), den technischen Vorschlag in [design-system/Technik.md](design-system/Technik.md).
 
@@ -29,12 +29,22 @@ design-system/          Das Design-System – 1:1 dieselben Dateien wie im Artif
     <Name>/preview.html Live-Vorschau pro Komponente
   assets/Logos/         G-Signet und Sonnen-Logo (freigestellt), Originale in original/
     Cover/preview.html  Titelbild des Design-Systems
-prototype/              Klickbarer Prototyp: Start, Fluggebiete, Jahreskarte, Kontrolle, Shop
+prototype/              Klickbarer Prototyp: Start, Fluggebiete mit Routenplaner, Wetter, Jahreskarte, Kontrolle, Shop, Verwaltung, Mein GKG
+backend/                Teile des künftigen GKG-Backends
+  wetter.js             Wetter-Proxy: Stationen und Prognosen von flightbuddyki.ch, serverseitig mit Zwischenspeicher
+  wetter.test.js        Tests dazu (npm run test:backend)
+  prognose-spots.json   Zuordnung GKG-Startplatz → Spot bei FlightBuddyKI
 docs/
-  Quellen.md            Woher die Inhalte stammen (gkg.ch, FlyCard Bassano)
+  Quellen.md            Woher die Inhalte stammen (gkg.ch, FlyCard Bassano, Karte, Wetter)
+  FlightBuddyKI-Prognosen.md  Option Prognosen: Leistung, Schnittstelle, Vertragspunkte
+  flightbuddyki-spots.json    Die Startplätze im Spot-Format des BuddyServers (Vorschlag)
 tools/
   tokens-css.js         Erzeugt CSS-Variablen aus tokens.json
-  build-tiles.py        Höhendaten laden, Relief- und Höhenkacheln für die 3D-Karte rechnen
+  fetch-overture.py     Kartendaten der Region aus Overture Maps laden (Orte, Wege, Wald, Gewässer, Bahnen)
+  build-mapdata.py      Namen, Linien und Wegnetz für die Karte aufbereiten
+  build-routes.js       Hike-&-Fly-Routen vorberechnen
+  export-spots.js       Startplätze für FlightBuddyKI exportieren (npm run spots)
+  build-tiles.py        Höhendaten laden, Karten- und Höhenkacheln für die 3D-Karte rechnen
   prepare-logos.py      Klub-Logos freistellen (weisser Grund → transparent)
   render-map-poster.js  Standbild der 3D-Karte rendern
   serve.js              Lokaler Server für den Prototyp
@@ -68,11 +78,11 @@ Voraussetzung: Node.js 18 oder neuer.
 ```bash
 npm install
 npx playwright install chromium   # nur beim ersten Mal, falls noch kein Browser installiert ist
-pip install -r tools/requirements.txt   # numpy und Pillow für Kacheln und Logos
-npm run tiles       # einmalig: Kartenkacheln rechnen (build/tiles/)
+pip install -r tools/requirements.txt   # numpy, Pillow, shapely, pyarrow, requests für Karte und Logos
+npm run karte       # einmalig: Kartendaten laden und aufbereiten, Kacheln rechnen (build/, wenige Minuten)
 npm run previews    # alle Komponenten hell und dunkel als Bild nach build/previews/
 npm run serve       # Prototyp bauen und auf http://localhost:8080 starten
-npm run check       # Prototyp bauen und prüfen (Fehler, Überlauf, Kaufablauf, 3D-Karte)
+npm run check       # Backend-Tests, Prototyp bauen und prüfen (Fehler, Überlauf, alle Abläufe, 3D-Karte, Routenplaner)
 ```
 
 `previews` und `check` brechen mit Fehlercode ab, wenn etwas nicht stimmt.

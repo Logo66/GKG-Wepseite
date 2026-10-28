@@ -2,7 +2,8 @@
 //   index.html         zum lokalen Öffnen im Browser (vollständiges HTML-Dokument)
 //   gkg-prototyp.html  dieselbe Seite ohne Dokument-Gerüst – so wird sie als Artifact veröffentlicht
 //   ds/                Tokens (folgen der Systemeinstellung hell/dunkel) und die Komponenten aus design-system/
-//   tiles/             Relief- und Höhenkacheln aus build/tiles/ (tools/build-tiles.py)
+//   tiles/             Karten- und Höhenkacheln aus build/tiles/ (tools/build-tiles.py)
+//   karte/             Namen, Linien, Wegnetz und Hike-&-Fly-Routen aus build/mapdata/
 //   vendor/            Stylesheet von MapLibre (das Skript lädt die Karte selbst von unpkg)
 //   shv/               Vorschaubilder der SHV-Infotafeln, falls tools/fetch-shv.py sie erzeugt hat
 const fs = require('fs');
@@ -15,7 +16,15 @@ const out = path.join(root, 'build', 'prototype');
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'ds'), { recursive: true });
 
-for (const f of ['app.js', 'app.css', 'data.js', 'ui.js', 'stations.js', 'map3d.js', 'store.js', 'admin.js', 'member.js']) fs.copyFileSync(path.join(src, f), path.join(out, f));
+for (const f of ['app.js', 'app.css', 'data.js', 'ui.js', 'stations.js', 'routing.js', 'map3d.js', 'store.js', 'forecast.js', 'admin.js', 'member.js']) fs.copyFileSync(path.join(src, f), path.join(out, f));
+
+// Kartendaten: Namen, Linien, Wegnetz, Hike-&-Fly-Routen (tools/build-mapdata.py, tools/build-routes.js)
+const mapdata = path.join(root, 'build', 'mapdata');
+fs.mkdirSync(path.join(out, 'karte'), { recursive: true });
+for (const f of ['orte.json', 'linien.json', 'netz.json', 'hikefly.json']) {
+  if (fs.existsSync(path.join(mapdata, f))) fs.copyFileSync(path.join(mapdata, f), path.join(out, 'karte', f));
+  else console.warn('Hinweis: build/mapdata/' + f + ' fehlt – tools/fetch-overture.py, tools/build-mapdata.py und tools/build-routes.js ausführen.');
+}
 
 // Vorschaubilder der SHV-Infotafeln (tools/fetch-shv.py) – nur, wenn sie gebaut und freigegeben sind
 const shv = path.join(root, 'build', 'shv');
@@ -28,6 +37,8 @@ if (shvFiles.length) {
     previews[f.replace(/\.webp$/, '')] = 'shv/' + f;
   }
 }
+// Ohne Backend (Artifact, statisch): kein Wetter-Proxy, Prognose nur als Beispiel. tools/serve.js liefert eine eigene config.js.
+fs.writeFileSync(path.join(out, 'config.js'), '// Erzeugt von tools/build-prototype.js – statischer Prototyp ohne Backend\nwindow.GKG_CONFIG = ' + JSON.stringify({ weatherUrl: null, forecastUrl: null, forecastLive: false }) + ';\n');
 fs.writeFileSync(path.join(out, 'shv-previews.js'), '// Erzeugt von tools/build-prototype.js\nwindow.GKG_SHV_PREVIEW = ' + JSON.stringify(previews) + ';\n');
 for (const f of ['map-poster.jpg', 'map-poster-dark.jpg']) if (fs.existsSync(path.join(src, f))) fs.copyFileSync(path.join(src, f), path.join(out, f));
 fs.mkdirSync(path.join(out, 'ds', 'logos'), { recursive: true });

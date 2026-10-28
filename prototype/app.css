@@ -391,3 +391,76 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .pt-qrbill dd { margin: 0; overflow-wrap: anywhere; }
 .pt-subsection { margin-top: var(--space-12); }
 .pt-subsection > h2 { margin-bottom: var(--space-4); }
+
+/* Namen auf der Karte (HTML, damit sie ohne Schriftserver scharf bleiben) */
+.pt-lb { z-index: 1; pointer-events: none; white-space: nowrap; font: 600 13px/16px var(--font-body); color: #1c2a30; text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 6px #ffffffcc; }
+.pt-lb-ort.pt-lb-r3, .pt-lb-ort.pt-lb-r4 { font: 700 16px/20px var(--font-display); letter-spacing: .01em; }
+.pt-lb-ort.pt-lb-r2 { font: 700 14px/18px var(--font-body); }
+.pt-lb-ort.pt-lb-r1 { font: 400 12px/15px var(--font-body); }
+.pt-lb-see { font: italic 600 13px/16px var(--font-body); color: #1f5f80; }
+.pt-lb-gipfel, .pt-lb-pass { display: grid; justify-items: center; font: 600 12px/14px var(--font-body); color: #3b2a1c; }
+.pt-lb-sym { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid #3b2a1c; filter: drop-shadow(0 0 1px #fff); }
+.pt-lb-pass .pt-lb-sym { width: 10px; height: 4px; border: 0; border-top: 2px solid #3b2a1c; border-bottom: 2px solid #3b2a1c; }
+.pt-lb-h { font: 500 11px/13px var(--font-mono); color: #5b4634; }
+.pt-mk { z-index: 3; }
+.pt-wx { z-index: 2; }
+.pt-map3d.is-far .pt-lb-ort.pt-lb-r1 { display: none; }
+
+/* Wegpunkte des Routenplaners */
+.pt-wp { z-index: 4; display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-full); background: #d9480f; color: #fff; border: 2px solid #fff; box-shadow: var(--shadow-sm); font: 700 13px/1 var(--font-body); cursor: grab; }
+.pt-wp.is-start { background: #2b8a3e; }
+.pt-wp.is-end { background: #10222a; }
+.pt-map3d-hint { position: absolute; z-index: 3; left: 50%; bottom: var(--space-3); transform: translateX(-50%); margin: 0; padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); background: var(--ink); color: var(--surface-raised); font: 700 14px/20px var(--font-body); box-shadow: var(--shadow-sm); max-width: calc(100% - 2 * var(--space-4)); text-align: center; }
+
+/* Ebenen-Auswahl */
+.pt-layers { position: absolute; z-index: 5; top: calc(var(--space-3) + var(--tap-target) + var(--space-2)); left: var(--space-3); margin: 0; padding: var(--space-3) var(--space-4); display: grid; gap: var(--space-2); background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 0; max-width: calc(100% - 2 * var(--space-3)); }
+.pt-layers legend { padding: 0; font: 700 14px/20px var(--font-body); color: var(--ink-muted); float: left; width: 100%; margin-bottom: var(--space-1); }
+.pt-layers .pt-check { align-items: center; font-size: 15px; min-height: 32px; }
+.pt-layers .pt-check input { margin: 0; }
+.pt-layers .pt-linkbtn { justify-self: start; min-height: 32px; }
+
+/* Legende: Liniensymbole */
+.pt-legend-ln { width: 22px; height: 0; border-top: 3px solid; display: inline-block; }
+.pt-ln-pfad { border-top: 3px dashed #b23a22; }
+.pt-ln-fahrweg { border-color: #8c6a43; border-top-width: 2px; }
+.pt-ln-hikefly { border-color: #ffd400; box-shadow: 0 0 0 1px #3a2f00; }
+.pt-ln-seilbahn { border-color: #111111; border-top-width: 2px; }
+.pt-ln-material { border-top: 3px dashed #c0392b; }
+.pt-ln-strom { border-top: 2px dashed #5f6b73; }
+
+/* Routenplaner */
+.pt-planner { display: grid; gap: var(--space-3); }
+.pt-planner > * { margin: 0 !important; }
+.pt-route-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-4); margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--sky-soft); }
+.pt-route-stats dt { font: 700 13px/18px var(--font-body); color: var(--ink-muted); }
+.pt-route-stats dd { margin: 0; font: 700 20px/26px var(--font-mono); font-variant-numeric: tabular-nums; }
+.pt-profile { margin: 0; }
+.pt-profile svg { display: block; width: 100%; height: auto; }
+.pt-profile-area { fill: var(--sky-soft); }
+.pt-profile-line { fill: none; stroke: #d9480f; stroke-width: 2; stroke-linejoin: round; }
+.pt-profile text { font: 500 10px/1 var(--font-mono); fill: var(--ink-muted); }
+.pt-hf { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.pt-hf li { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--wing-soft); }
+.pt-hf .gkg-btn { justify-self: start; margin-top: var(--space-1); }
+textarea.pt-pre { width: 100%; box-sizing: border-box; border: 1px solid var(--line-strong); color: var(--ink); resize: vertical; }
+
+/* Thermik-Prognose im Pop-up */
+.pt-fc { display: grid; gap: var(--space-3); }
+.pt-fc-by { font-weight: 400; color: var(--ink-muted); }
+.pt-fc .pt-tabs { margin: 0; }
+.pt-fc .pt-tab { min-height: 36px; font-size: 14px; padding: 0 var(--space-3); }
+.pt-fc-bars { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; align-items: end; padding: var(--space-2) 0; }
+.pt-fc-col { display: grid; justify-items: center; gap: 2px; }
+.pt-fc-bar { width: 100%; max-width: 26px; border-radius: 3px 3px 0 0; }
+.pt-fc-go { background: var(--go); }
+.pt-fc-caution { background: var(--caution); }
+.pt-fc-stop { background: var(--line-strong); }
+.pt-fc-val { font: 500 11px/14px var(--font-mono); color: var(--ink-muted); }
+.pt-fc-h { font: 500 11px/14px var(--font-mono); color: var(--ink-muted); }
+.pt-fc-warn { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); font-size: 15px; line-height: 22px; }
+
+/* Verträge */
+.pt-contract { display: grid; gap: var(--space-3); max-width: 760px; }
+.pt-contract > * { margin: 0 !important; }
+.pt-contract-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: var(--space-3); }
+.pt-contract-head .pt-eyebrow { margin: 0 0 var(--space-1); }

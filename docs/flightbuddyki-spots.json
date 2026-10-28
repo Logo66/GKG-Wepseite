@@ -1,0 +1,269 @@
+{
+  "_hinweis": "Vorschlag des GKG für die Prognose-Spots auf dem BuddyServer (Format SpotConfig). Höhen und Richtungen aus prototype/data.js, gegen das Höhenmodell geprüft. relevant_layer_* nach der Regel des Spot-Loaders (Start − 100 m bis Start + 2000 m).",
+  "spots": [
+    {
+      "id": "gkg-froni",
+      "name": "Froni (Mollis)",
+      "lat": 47.0722,
+      "lon": 9.0908,
+      "start_height_m": 1350,
+      "aspect_deg": 0,
+      "relevant_layer_min_m": 1200,
+      "relevant_layer_max_m": 3400,
+      "allowed_wind_sectors": null,
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Mollis"
+      ],
+      "notes": "Angaben vom Ressort Fluggebiete noch zu bestätigen. Startrichtung unbekannt – aspect_deg ist ein Platzhalter.",
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Mollis)"
+      ]
+    },
+    {
+      "id": "gkg-froni-winter",
+      "name": "Froni Winter (Mollis)",
+      "lat": 47.0724,
+      "lon": 9.0937,
+      "start_height_m": 1362,
+      "aspect_deg": 315,
+      "relevant_layer_min_m": 1200,
+      "relevant_layer_max_m": 3400,
+      "allowed_wind_sectors": [
+        315
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Mollis"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Mollis)"
+      ]
+    },
+    {
+      "id": "gkg-kerenzer",
+      "name": "Kerenzer (Kerenzerberg)",
+      "lat": 47.1089,
+      "lon": 9.0837,
+      "start_height_m": 675,
+      "aspect_deg": 315,
+      "relevant_layer_min_m": 500,
+      "relevant_layer_max_m": 2700,
+      "allowed_wind_sectors": [
+        315
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Kerenzerberg"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Mollis)"
+      ]
+    },
+    {
+      "id": "gkg-huesliberg",
+      "name": "Hüsliberg",
+      "lat": 47.1897,
+      "lon": 9.0747,
+      "start_height_m": 1012,
+      "aspect_deg": 225,
+      "relevant_layer_min_m": 900,
+      "relevant_layer_max_m": 3100,
+      "allowed_wind_sectors": [
+        180,
+        225,
+        270
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Hüsliberg"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Schänis)"
+      ]
+    },
+    {
+      "id": "gkg-altwis",
+      "name": "Altwis",
+      "lat": 47.2107,
+      "lon": 9.0679,
+      "start_height_m": 1055,
+      "aspect_deg": 315,
+      "relevant_layer_min_m": 900,
+      "relevant_layer_max_m": 3100,
+      "allowed_wind_sectors": [
+        270,
+        315,
+        0
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Altwis"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Schänis)"
+      ]
+    },
+    {
+      "id": "gkg-bogmen",
+      "name": "Obere Bogmen",
+      "lat": 47.1863,
+      "lon": 9.0942,
+      "start_height_m": 1432,
+      "aspect_deg": 225,
+      "relevant_layer_min_m": 1300,
+      "relevant_layer_max_m": 3500,
+      "allowed_wind_sectors": [
+        180,
+        225,
+        270
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Obere Bogmen"
+      ],
+      "notes": "Angaben vom Ressort Fluggebiete noch zu bestätigen.",
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Schänis)"
+      ]
+    },
+    {
+      "id": "gkg-hirzli",
+      "name": "Hirzli",
+      "lat": 47.13378,
+      "lon": 9.00727,
+      "start_height_m": 1640,
+      "aspect_deg": 315,
+      "relevant_layer_min_m": 1500,
+      "relevant_layer_max_m": 3700,
+      "allowed_wind_sectors": [
+        270,
+        315,
+        0
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Hirzli"
+      ],
+      "notes": "Angaben vom Ressort Fluggebiete noch zu bestätigen.",
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Schänis (Richtung, Schwierigkeit), Position: Paragliding365 (Stand 2016))"
+      ]
+    },
+    {
+      "id": "gkg-kiosk",
+      "name": "Kiosk (Braunwald)",
+      "lat": 46.9385,
+      "lon": 8.998,
+      "start_height_m": 1242,
+      "aspect_deg": 113,
+      "relevant_layer_min_m": 1100,
+      "relevant_layer_max_m": 3300,
+      "allowed_wind_sectors": [
+        90,
+        135
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Braunwald"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Braunwald, braunwald.ch)"
+      ]
+    },
+    {
+      "id": "gkg-gumen",
+      "name": "Gumen (Winter) (Braunwald)",
+      "lat": 46.9551,
+      "lon": 8.9843,
+      "start_height_m": 1875,
+      "aspect_deg": 180,
+      "relevant_layer_min_m": 1700,
+      "relevant_layer_max_m": 3900,
+      "allowed_wind_sectors": [
+        135,
+        180,
+        225
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Braunwald"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (SHV-Infotafel Braunwald)"
+      ]
+    },
+    {
+      "id": "gkg-gumengrat",
+      "name": "Gumengrat (Braunwald)",
+      "lat": 46.96,
+      "lon": 8.98721,
+      "start_height_m": 2064,
+      "aspect_deg": 180,
+      "relevant_layer_min_m": 1900,
+      "relevant_layer_max_m": 4100,
+      "allowed_wind_sectors": [
+        180
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Braunwald"
+      ],
+      "notes": null,
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (braunwald.ch, SHV-Infotafel Braunwald)"
+      ]
+    },
+    {
+      "id": "gkg-aempaechli",
+      "name": "Ämpächli (Elm)",
+      "lat": 46.91889,
+      "lon": 9.14917,
+      "start_height_m": 1490,
+      "aspect_deg": 180,
+      "relevant_layer_min_m": 1300,
+      "relevant_layer_max_m": 3500,
+      "allowed_wind_sectors": [
+        135,
+        180,
+        225
+      ],
+      "elevation_source": "manual",
+      "country": "CH",
+      "region": "Ostschweiz",
+      "aliases": [
+        "Elm"
+      ],
+      "notes": "Angaben vom Ressort Fluggebiete noch zu bestätigen.",
+      "attribution": [
+        "Startplatzdaten: Gleitschirmklub Glarnerland (Paragliding365 (ältere Angabe))"
+      ]
+    }
+  ]
+}

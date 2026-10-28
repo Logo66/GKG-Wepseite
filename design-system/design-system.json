@@ -73,8 +73,8 @@
   },
   "lastChange": {
     "by": "Claude",
-    "at": "2026-10-28T14:12:45Z",
+    "at": "2026-10-28T19:08:45Z",
     "via": "Claude Code",
-    "note": "Palette in den Logo-Farben (Sonnen-Gelb, Türkis, wing-edge), WeatherCard mit fehlenden Werten und live=false, DataTable mit stack für Handys"
+    "note": "Technik: scharfe Karte (512-px-Kacheln, Overture-Daten), Routenplaner und Hike & Fly, Wetter-Proxy umgesetzt, Option Prognosen von FlightBuddyKI"
   }
 }

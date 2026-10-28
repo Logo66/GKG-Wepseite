@@ -57,10 +57,13 @@ Die Auszüge in `prototype/data.js` (`shv`) stammen aus Suchmaschinen-Auszügen 
 - [flightbuddyki.ch](https://flightbuddyki.ch) – BuddyServer, Endpunkt `/api/v1/weather/stations` mit den Quellen FANET (WindBuddy), Holfuy und SwissMetNet. Schnittstelle aus dem Quellcode des BuddyServers übernommen, nicht gegen den laufenden Dienst getestet.
 - [MeteoSchweiz](https://www.meteoschweiz.admin.ch) – Messnetz SwissMetNet; Angabe «Quelle: MeteoSchweiz» Pflicht.
 - [Holfuy](https://holfuy.com) – Nutzung der Werte auf gkg.ch klären.
+- Prognosen (Option): Thermik-Schnittstelle des BuddyServers (`/api/v1/weather/thermik/…`), laut Schnittstelle mit Wetterdaten «ICON-D2 via Open-Meteo (CC BY 4.0)». Details in [FlightBuddyKI-Prognosen.md](FlightBuddyKI-Prognosen.md).
 
 ## Karte
 
 - Höhendaten: [Terrain Tiles auf AWS Open Data](https://registry.opendata.aws/terrain-tiles/) (Mapzen/Tilezen; in Europa u. a. EU-DEM, © Copernicus)
+- Orte, Gipfel, Strassen, Wege, Wald, Fels, Gletscher, Gewässer, Seilbahnen, Stromleitungen: [Overture Maps](https://overturemaps.org), Ausgabe 2026-10-21.0, gelesen direkt von Amazon S3 (`tools/fetch-overture.py`). Die Daten stammen grösstenteils aus OpenStreetMap: «© OpenStreetMap-Mitwirkende», Lizenz ODbL. Wegnetz und Hike-&-Fly-Routen sind daraus abgeleitet und stehen ebenfalls unter ODbL.
+- OpenStreetMap selbst, swisstopo und der Overpass-Dienst waren aus der Arbeitsumgebung gesperrt; deshalb der Weg über Overture.
 - Kartenbibliothek: [MapLibre GL JS](https://maplibre.org/) 5.24.0 (BSD-3-Clause)
 
 ## Logos

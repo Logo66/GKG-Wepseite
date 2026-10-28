@@ -14,11 +14,11 @@ window.GKGStore = (function () {
   // Jedes Ressort sieht nur, was es für seine Arbeit braucht. Die Kasse sieht von Mitgliedern
   // nur Name und Adresse, das Aktuariat keine Buchhaltung, die Revision liest nur.
   var ROLES = {
-    praesidium: { label: 'Präsidium', perms: ['members.read', 'finance.read', 'cards.read', 'log.read'] },
+    praesidium: { label: 'Präsidium', perms: ['members.read', 'finance.read', 'cards.read', 'log.read', 'contracts.read', 'contracts.write'] },
     aktuariat: { label: 'Aktuariat (Mitglieder)', perms: ['members.read', 'members.write', 'requests.write', 'cards.read'] },
-    kasse: { label: 'Kasse (Finanzen)', perms: ['members.address', 'finance.read', 'finance.write', 'cards.read'] },
+    kasse: { label: 'Kasse (Finanzen)', perms: ['members.address', 'finance.read', 'finance.write', 'cards.read', 'contracts.read'] },
     fluggebiete: { label: 'Ressort Fluggebiete', perms: ['cards.read', 'cards.write'] },
-    revision: { label: 'Revision', perms: ['members.address', 'finance.read'] },
+    revision: { label: 'Revision', perms: ['members.address', 'finance.read', 'contracts.read'] },
     admin: { label: 'Webmaster', perms: ['roles.read', 'log.read'] }
   };
   var MODULES = [
@@ -27,6 +27,7 @@ window.GKGStore = (function () {
     { id: 'rechnungen', label: 'Beiträge & Rechnungen', any: ['finance.read'] },
     { id: 'buchhaltung', label: 'Buchhaltung', any: ['finance.read'] },
     { id: 'karten', label: 'Jahreskarten', any: ['cards.read'] },
+    { id: 'vertraege', label: 'Verträge & Dienste', any: ['contracts.read'] },
     { id: 'rollen', label: 'Rollen & Zugänge', any: ['roles.read'] }
   ];
   function can(role, perm) { var r = ROLES[role]; return !!r && r.perms.indexOf(perm) >= 0; }
@@ -52,6 +53,7 @@ window.GKGStore = (function () {
     { no: '5100', name: 'Beiträge an Kurse und Sicherheitstrainings', type: 'aufwand' },
     { no: '5200', name: 'Anlässe und GKG-Cup', type: 'aufwand' },
     { no: '5300', name: 'Verwaltung, Website, Software', type: 'aufwand' },
+    { no: '5350', name: 'Wetterdienste und Prognosen', type: 'aufwand' },
     { no: '5400', name: 'Zahlungsgebühren', type: 'aufwand' }
   ];
   function account(no) { return ACCOUNTS.filter(function (a) { return a.no === no; })[0]; }
@@ -108,7 +110,7 @@ window.GKGStore = (function () {
   }
 
   function seed() {
-    var s = { version: 1, season: SEASON, members: [], invoices: [], journal: [], cards: [], requests: [], log: [], session: { role: 'aktuariat', memberId: null }, seq: { member: 1100, invoice: 0, booking: 0, card: 200, request: 0 } };
+    var s = { version: 2, season: SEASON, contracts: contracts(), members: [], invoices: [], journal: [], cards: [], requests: [], log: [], session: { role: 'aktuariat', memberId: null }, seq: { member: 1100, invoice: 0, booking: 0, card: 200, request: 0 } };
     function book(date, text, debit, credit, amount, ref) {
       s.seq.booking++;
       s.journal.push({ id: 'B-' + pad(s.seq.booking, 4), date: date, text: text, debit: debit, credit: credit, amount: round2(amount), ref: ref || null, by: 'Beispiel' });
@@ -172,6 +174,15 @@ window.GKGStore = (function () {
     return s;
   }
 
+  // Verträge mit Dienstleistern – heute nur die Option Prognosen von FlightBuddyKI
+  function contracts() {
+    return [{
+      id: 'fbki-prognose', partner: 'FlightBuddyKI', title: 'Thermik-Prognosen für alle Klubgebiete',
+      scope: 'Stündliche Prognose (Steigwerte, Basis, Einschätzung, Warnungen wie Föhn) für die 11 Startplätze, heute und die nächsten 4 Tage, auf gkg.ch im Pop-up jedes Startplatzes.',
+      model: 'Jahrespauschale für alle Klubgebiete', fee: null, account: '5350', status: 'option', decided: null, doc: 'docs/FlightBuddyKI-Prognosen.md'
+    }];
+  }
+
   function newCard(s, holder, memberId, kind, source, date) {
     s.seq.card++;
     return { id: SEASON + '-0' + s.seq.card, holder: holder, memberId: memberId, kind: kind, source: source, issued: date || today(), status: 'gültig', reason: null };
@@ -183,7 +194,12 @@ window.GKGStore = (function () {
   function load() {
     try {
       var raw = window.localStorage.getItem(KEY);
-      if (raw) { var s = JSON.parse(raw); if (s && s.version === 1 && s.season === SEASON) return s; }
+      if (raw) {
+        var s = JSON.parse(raw);
+        // Stand aus Version 1: Verträge ergänzen
+        if (s && s.version === 1 && s.season === SEASON) { s.version = 2; s.contracts = contracts(); }
+        if (s && s.version === 2 && s.season === SEASON) return s;
+      }
     } catch (e) { /* kein Speicher verfügbar – dann gelten die Beispieldaten */ }
     return seed();
   }
@@ -345,6 +361,27 @@ window.GKGStore = (function () {
         return c;
       });
     },
+    // Vertrag: Vorstand beschliesst (status aktiv/option), Kasse verbucht die Pauschale
+    setContract: function (id, status, who) {
+      return change(function (s) {
+        var c = (s.contracts || []).filter(function (x) { return x.id === id; })[0];
+        if (!c) return null;
+        c.status = status; c.decided = status === 'aktiv' ? today() : null;
+        log(s, who, 'contracts', c.partner + ': ' + c.title + ' – ' + (status === 'aktiv' ? 'vom Vorstand beschlossen' : 'zurück auf Option'));
+        return c;
+      });
+    },
+    bookContract: function (id, amount, who) {
+      return change(function (s) {
+        var c = (s.contracts || []).filter(function (x) { return x.id === id; })[0];
+        if (!c) return null;
+        c.fee = round2(amount);
+        var e = bookInto(s, { text: c.partner + ': ' + c.model + ' ' + s.season, debit: c.account, credit: '1020', amount: amount, ref: c.id }, who);
+        log(s, who, 'finance', 'Buchung ' + e.id + ': ' + e.text + ' (CHF ' + e.amount.toFixed(2) + ')');
+        return e;
+      });
+    },
+
     // Online-Kauf auf #jahreskarte: Karte + Buchung auf Zahlungsanbieter / Jahreskarten Gäste
     buyCard: function (data) {
       return change(function (s) {

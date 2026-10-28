@@ -17,16 +17,20 @@ Ein Vorschlag für den technischen Aufbau. Anbieter und Konditionen ändern sich
 
 ## 3D-Karte der Fluggebiete
 
-**Heute im Prototyp:** MapLibre GL 5.24 mit 3D-Gelände (1,3-fach überhöht), Himmel und Dunst, Marker für 11 Start- und 4 Landeplätze, 2D/3D-Umschalter, Gebiete anfliegen, Infopanel mit Höhe, Startrichtung, Koordinaten (WGS84 und LV95) und Quelle.
+**Heute im Prototyp:** MapLibre GL 5.24 mit 3D-Gelände (1,3-fach überhöht), Himmel und Dunst, 2D/3D-Umschalter, Marker für 11 Start- und 4 Landeplätze, Windstationen, Ortsnamen und Gipfel, Strassen, Bahnen, Seilbahnen, Materialseilbahnen, Stromleitungen, Wege und Pfade, Hike-&-Fly-Routen und ein Routenplaner. Jede Ebene lässt sich unter «Ebenen» ausblenden.
 
 - **Gelände:** offene Höhendaten «Terrain Tiles» auf AWS (Mapzen/Tilezen, in Europa u. a. EU-DEM © Copernicus), etwa 30 m Auflösung.
-- **Bild:** ein eigenes schattiertes Relief mit Höhenstufen und Seen, aus denselben Höhendaten gerechnet (`tools/build-tiles.py`).
-- **Kachel-Ringe:** aussen grob, innen fein (z8–11 weit herum, z12 Glarnerland, z13 rund um die Plätze). So endet das Gelände nicht sichtbar am Horizont, und die Datenmenge bleibt klein: Relief 1,0 MB, Höhen 11 MB, wovon jeweils nur die sichtbaren Kacheln geladen werden.
+- **Kartengrund:** eigene 512-px-Kacheln (`tools/build-tiles.py`): schattiertes Relief mit Höhenstufen, darüber scharf eingezeichnet Wald, Gebüsch, Fels, Geröll, Gletscher, Siedlungen, Seen, Flüsse und Bäche sowie Höhenlinien (200 m bei Zoom 10, 100 m bei 11, 50 m ab 12). Flächen und Gewässer aus Overture Maps (© OpenStreetMap-Mitwirkende, ODbL).
+- **Warum 512 px:** MapLibre rechnet in 512er-Kacheln. Die alten 256er-Kacheln waren nur bis Zoom 12 scharf und wurden darüber bis zu viermal vergrössert – das war die Unschärfe, vor allem in 2D. Jetzt ist der Kartengrund bis Zoom 13 scharf, die Karte geht bis Zoom 14,2.
+- **Linien als Vektoren** (`karte/linien.json`, 1 MB): Strassen, Bahnen, Seilbahnen, Skilifte, Materialseilbahnen (rot gestrichelt – Kabel!) und Stromleitungen bleiben bei jedem Zoom scharf und liegen in 3D auf dem Gelände. Materialseilbahnen und Leitungen sind in OpenStreetMap nicht vollständig erfasst – kein Ersatz für die Luftfahrthinderniskarte.
+- **Namen** (`karte/orte.json`): 2000 Ortschaften, Gipfel mit Höhe, Pässe und Seen, jeder mit einem Mindestzoom, damit sich keine Namen überlappen. Angezeigt werden nur die im Bild; in der geneigten Ansicht keine am Horizont.
+- **Kachel-Ringe:** Karte z7–10 weit herum, z11–12 Glarnerland mit Linthebene, z13 rund um die Plätze; Höhen z6–11. Kartengrund 6,5 MB in 198 Kacheln, Höhen 11 MB – geladen werden nur die sichtbaren.
+- **Daten neu bauen:** `npm run karte` (Overture abrufen, Namen/Linien/Wegnetz aufbereiten, Hike-&-Fly-Routen rechnen, Kacheln rendern; zusammen wenige Minuten).
 
 **So lädt sie schnell:**
 - MapLibre (rund 1 MB) wird erst geladen, wenn jemand die Fluggebiete öffnet – die Startseite bleibt leicht.
-- Bis die Karte bereit ist, steht ein Standbild der Startansicht da (67 KB, hell und dunkel, `npm run poster`).
-- Reliefkacheln als WebP (meist 2–10 KB pro Kachel), Höhen nur bis z11.
+- Bis die Karte bereit ist, steht ein Standbild der Startansicht da (rund 80 KB, hell und dunkel, `npm run poster`).
+- Kartenkacheln als WebP (meist 20–50 KB pro 512er-Kachel), Höhen nur bis z11. Das Wegnetz (2,5 MB) lädt erst ab Zoom 11 oder mit dem Routenplaner.
 - Auf dem Handy verschiebt man mit zwei Fingern (Seite bleibt scrollbar), am Desktop zoomt man mit Strg + Mausrad.
 - Ohne WebGL oder bei einem Ladefehler erscheint das Schema der Gebiete mit Hinweis.
 - Im Test (Software-Grafik ohne GPU) ist die Karte nach 2–4 Sekunden bedienbar; auf echten Geräten mit Grafikchip ist sie schneller (nicht gemessen).
@@ -35,6 +39,18 @@ Ein Vorschlag für den technischen Aufbau. Anbieter und Konditionen ändern sich
 - **Luftbild statt Relief:** swisstopo SWISSIMAGE über den WMTS-Dienst `wmts.geo.admin.ch` (Web-Mercator) – im Modul vorbereitet mit `window.GKG_MAP_CONFIG = { imagery: 'swisstopo' }`, aber nicht getestet, weil swisstopo aus der Arbeitsumgebung gesperrt war. Nutzungsbedingungen und Quellenangabe «© swisstopo» beachten.
 - **Feinere Höhen:** swissALTI3D von swisstopo ist viel genauer als 30 m; ob es dafür einen fertigen Kacheldienst für MapLibre gibt, ist offen. Sonst die Höhenkacheln einmalig selbst aus swissALTI3D erzeugen.
 - **Lufträume, Hindernisse, Schutzgebiete** als zusätzliche Ebenen (z. B. Wildruhezonen am Hirzli) – Datenquellen beim SHV und bei swisstopo/BAZL abklären.
+- **Offizielle Wanderwege:** swisstopo swissTLM3D (Wanderwege mit Signalisation gelb / weiss-rot-weiss / weiss-blau-weiss) statt der OpenStreetMap-Wege. Overture liefert keine Schwierigkeitsgrade (T1–T6) und keine Wanderrouten.
+
+## Routenplaner und Hike & Fly
+
+- **Routenplaner** auf der Fluggebiete-Karte: Start, Zwischenpunkte und Ziel auf die Karte tippen (verschiebbar) oder einen Startplatz als Ziel wählen. Die Route folgt Pfaden, Fahrwegen und kleinen Strassen; Hauptstrassen werden gemieden.
+  - Ergebnis: Distanz, Auf- und Abstieg, Gehzeit, höchster Punkt, Höhenprofil, Anteile der Wegarten, GPX für Uhr, Vario oder App.
+  - Gerechnet wird im Browser (`prototype/routing.js`, Dijkstra) auf einem Wegnetz der Talschaft (`karte/netz.json`: 44'000 Knoten, 51'500 Wegstücke mit Länge und Auf-/Abstieg aus dem Höhenmodell).
+- **Gehzeit nach DIN 33466:** 4 km/h in der Ebene, 300 Hm/h aufwärts, 500 Hm/h abwärts; grösserer Anteil plus halber kleinerer. Das Tempo ist wählbar (300–600 Hm/h aufwärts); alle drei Werte skalieren gleich.
+- **Hike-&-Fly-Routen:** 9 Routen zu den Startplätzen, vorberechnet mit demselben Planer (`tools/build-routes.js`) ab Landeplätzen und Bahnstationen. Zu sehen auf der Karte (gelb) und im Pop-up jedes Startplatzes, mit Zeit für 300 und 500 Hm/h.
+  - Vergleich mit gkg.ch: Obere Bogmen ab Rufi 979 Hm, bei 500 Hm/h 2 h 25 (gkg.ch: ca. 2 h 30); Hirzli ab Morgenholz 1 h 35 (ca. 1 h 30); Gumengrat 35 min nach DIN (ca. 30 min).
+- **Vorbehalte:** Wege aus OpenStreetMap ohne Schwierigkeitsgrad; vor Ort prüfen, Wildruhezonen, Alpbetrieb und Wegrechte beachten. Wo ein Startplatz abseits eines eingetragenen Wegs liegt, sagt das Pop-up, wie weit es über Wiese geht.
+- **Daten:** © OpenStreetMap-Mitwirkende (ODbL) über Overture Maps. Das Wegnetz ist eine abgeleitete Datenbank und steht damit ebenfalls unter ODbL.
 
 ## Wetterdaten
 
@@ -45,7 +61,15 @@ Ein Vorschlag für den technischen Aufbau. Anbieter und Konditionen ändern sich
 - **Browser-Zugriff (CORS):** Der BuddyServer beantwortet Browser-Anfragen nur von freigegebenen Adressen (Umgebungsvariable `CORS_EXTRA_ORIGIN`). Zwei Wege:
   - **Empfohlen – über das GKG-Backend:** Das Backend holt die Stationen alle paar Minuten serverseitig, speichert sie zwischen und liefert sie an die Website. Vorteile: eine Anfrage statt einer pro Besucher, die Website zeigt bei einem Ausfall die letzten Werte mit Zeitstempel, und der BuddyServer muss nichts freigeben.
   - **Direkt aus dem Browser:** `https://www.gkg.ch` beim BuddyServer in `CORS_EXTRA_ORIGIN` aufnehmen. Das entscheidet der Betreiber des BuddyServers; im Rahmen dieser Website wurde dort nichts geändert.
-- **Prototyp:** versucht die Live-Abfrage und zeigt sonst klar markierte Beispielwerte («Beispielwerte», gestrichelte Stationen auf der Karte). Als Artifact sind externe Abfragen gesperrt, dort erscheinen immer die Beispielwerte.
+- **Umgesetzt – `backend/wetter.js`:** `GET /api/wetter/stationen` holt die Stationen serverseitig.
+  - Die Region ist fest, es ist kein offener Proxy.
+  - Nur bekannte Felder werden weitergegeben.
+  - Zwischenspeicher 5 Minuten; gleichzeitige Anfragen teilen sich einen Abruf.
+  - Bei einem Ausfall bis 2 Stunden die letzten Werte, als veraltet markiert. Das Alter jeder Messung wächst mit.
+  - Läuft als Next.js-Route (`export const GET = req => weather.handle(req)`) und lokal mit `npm run serve`.
+  - Tests: `npm run test:backend`.
+- **Prototyp:** Lokal (`npm run serve`) kommt das Wetter über diese Route. Als Artifact gibt es kein Backend und externe Abfragen sind gesperrt, dort erscheinen klar markierte Beispielwerte («Beispielwerte», gestrichelte Stationen auf der Karte).
+- **Option Prognosen von FlightBuddyKI:** Thermik-Prognose für alle Startplätze gegen eine Jahrespauschale – Leistung, Schnittstelle und Vertragspunkte in [`docs/FlightBuddyKI-Prognosen.md`](../docs/FlightBuddyKI-Prognosen.md). Im Prototyp im Pop-up jedes Startplatzes mit Beispielwerten; in der Verwaltung unter «Verträge & Dienste».
 - **Ampel nur zur Orientierung:** vorläufige Schwellen in `stations.js` (Böen ab 25 km/h oder 15 km/h über dem Mittelwind «Böig», ab 28 km/h Wind oder 35 km/h Böen «Starker Wind», älter als 30 Minuten «Veraltet»). Die Werte legt das Ressort Sicherheit fest; die Entscheidung zu starten liegt immer bei der Pilotin oder dem Piloten.
 - **Bestehende Quellen:** Ob die klubeigene Station Obere Bogmen und die Windstation Braunwald schon über flightbuddyki.ch kommen, prüfen; sonst ergänzen oder verlinken.
 - **Prognosen:** Spezialdienste (MeteoSchweiz, Windy, Burnair, skybriefing) werden verlinkt statt nachgebaut.
@@ -119,3 +143,4 @@ Empfehlung: Entscheid in Phase 0, nachdem geklärt ist, womit der Club heute arb
 - E-Mail-Versand
 - Porto und Versandmaterial für den Shop
 - Domain gkg.ch (bleibt bestehen)
+- Option: Thermik-Prognosen von FlightBuddyKI (Jahrespauschale, Betrag offen)

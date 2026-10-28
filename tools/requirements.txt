@@ -1,2 +1,5 @@
 numpy
 Pillow
+shapely
+pyarrow
+requests

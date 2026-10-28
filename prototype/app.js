@@ -41,6 +41,7 @@
   }
   function StationNote(p) {
     var wx = p.wx;
+    if (wx && wx.live && wx.stale) return h('p', { className: 'pt-wx-note', role: 'note' }, h('b', null, 'Letzte bekannte Werte. '), 'flightbuddyki.ch ist gerade nicht erreichbar; das Alter jeder Messung steht auf der Karte.');
     if (!wx || wx.live) return null;
     return h('p', { className: 'pt-wx-note', role: 'note' },
       h('b', null, 'Beispielwerte. '),
@@ -178,6 +179,8 @@
     }));
   }
 
+  var LAYER_CHOICES = [['wege', 'Wege und Pfade'], ['hikefly', 'Hike-&-Fly-Routen'], ['strassen', 'Strassen und Bahnen'], ['bahnen', 'Seilbahnen und Leitungen'], ['namen', 'Ortsnamen und Gipfel']];
+
   // Die 3D-Karte: lädt MapLibre erst hier, zeigt bis dahin ein Standbild bzw. bei Fehlern das Schema.
   // Mit p.wx erscheinen die Windstationen als Pfeile; p.onStation(id) meldet einen Tipp darauf.
   function Map3D(p) {
@@ -187,6 +190,9 @@
     var er = useState(''), err = er[0], setErr = er[1];
     var tr = useState(true), terrain = tr[0], setTerrain = tr[1];
     var wo = useState(!p.compact), wxOn = wo[0], setWxOn = wo[1];
+    var gr = useState({ wege: true, hikefly: true, strassen: true, bahnen: true, namen: true }), groups = gr[0], setGroups = gr[1];
+    var lo = useState(false), layersOpen = lo[0], setLayersOpen = lo[1];
+    function setGroup(k, on) { var g = Object.assign({}, groups); g[k] = on; setGroups(g); apiRef.current.setGroup(k, on); }
     useEffect(function () {
       var alive = true;
       window.GKGMap.create(ref.current, {
@@ -197,6 +203,7 @@
         apiRef.current = api;
         if (p.apiRef) p.apiRef.current = api;
         setState('ready');
+        if (cb.current.onReady) cb.current.onReady(api);
       }, function (e) { if (alive) { setErr(e && e.message ? e.message : String(e)); setState('error'); } });
       return function () {
         alive = false;
@@ -225,8 +232,18 @@
               h(AreaMap, { selected: p.focusArea, onSelect: function (id) { go('gebiet-' + id); } }))),
       state === 'ready' && h('div', { className: 'pt-map3d-tools' },
         h(G.Button, { variant: 'quiet', onClick: toggle, 'aria-pressed': terrain }, terrain ? '2D-Ansicht' : '3D-Ansicht'),
-        p.wx && h(G.Button, { variant: 'quiet', onClick: function () { setWxOn(!wxOn); }, 'aria-pressed': wxOn }, wxOn ? 'Wind ausblenden' : 'Wind zeigen'),
-        !p.compact && h(G.Button, { variant: 'quiet', onClick: function () { apiRef.current.overview(); if (p.onOverview) p.onOverview(); } }, 'Übersicht')));
+        h(G.Button, { variant: 'quiet', onClick: function () { setLayersOpen(!layersOpen); }, 'aria-expanded': layersOpen, 'aria-controls': 'layers-' + (p.compact ? 'c' : 'm') }, 'Ebenen'),
+        p.onPlan && h(G.Button, { variant: p.planning ? 'primary' : 'quiet', onClick: p.onPlan, 'aria-pressed': !!p.planning }, p.planning ? 'Planer schliessen' : 'Route planen'),
+        !p.compact && h(G.Button, { variant: 'quiet', onClick: function () { apiRef.current.overview(); if (p.onOverview) p.onOverview(); } }, 'Übersicht')),
+      state === 'ready' && layersOpen && h('fieldset', { className: 'pt-layers', id: 'layers-' + (p.compact ? 'c' : 'm') },
+        h('legend', null, 'Auf der Karte zeigen'),
+        LAYER_CHOICES.map(function (c) {
+          return h('label', { key: c[0], className: 'pt-check' },
+            h('input', { type: 'checkbox', checked: !!groups[c[0]], onChange: function (e) { setGroup(c[0], e.target.checked); } }), c[1]);
+        }),
+        p.wx && h('label', { className: 'pt-check' }, h('input', { type: 'checkbox', checked: wxOn, onChange: function (e) { setWxOn(e.target.checked); } }), 'Windstationen'),
+        h('button', { type: 'button', className: 'pt-linkbtn', onClick: function () { setLayersOpen(false); } }, 'Fertig')),
+      p.planning && state === 'ready' && h('p', { className: 'pt-map3d-hint', role: 'status' }, 'Tippe auf die Karte: Start, Zwischenpunkte, Ziel.'));
   }
 
   function SiteFacts(p) {
@@ -281,7 +298,9 @@
           near && h('div', { className: 'pt-site-wind' },
             h('h3', { className: 'pt-h4' }, 'Wind in der Nähe'),
             h('p', null, h('b', null, windText(near.station))),
-            h('p', { className: 'pt-small pt-muted' }, near.station.station + ' · ' + near.km.toFixed(1).replace('.', ',') + ' km entfernt · ' + near.station.updated + ' · ' + (near.station.live ? 'Quelle: ' + near.station.source : 'Beispielwert')))),
+            h('p', { className: 'pt-small pt-muted' }, near.station.station + ' · ' + near.km.toFixed(1).replace('.', ',') + ' km entfernt · ' + near.station.updated + ' · ' + (near.station.live ? 'Quelle: ' + near.station.source : 'Beispielwert'))),
+          x.kind === 'start' && h(window.GKGForecast.Panel, { site: x }),
+          x.kind === 'start' && h(HikeFly, { site: x, onShowRoute: p.onShowRoute })),
         h('section', { className: 'pt-shv', 'aria-labelledby': 'shv-t' },
           tafel
             ? h(Fragment, null,
@@ -327,18 +346,175 @@
       st.sourceId === 'swissmetnet' && h('p', { className: 'pt-small pt-muted' }, 'Quelle: MeteoSchweiz'));
   }
 
+  // Vorberechnete Hike-&-Fly-Routen (karte/hikefly.json, tools/build-routes.js)
+  function useHikeFly() {
+    var s = useState(null), data = s[0], setData = s[1];
+    useEffect(function () {
+      var alive = true;
+      window.GKGMap.loadData('hikefly.json').then(function (d) { if (alive) setData(d); }, function () { if (alive) setData({ routes: [] }); });
+      return function () { alive = false; };
+    }, []);
+    return data;
+  }
+  function fmtKm(km) { return km.toFixed(1).replace('.', ',') + ' km'; }
+  function fmtH(hours) { return window.GKGRoute.hm(hours); }
+
+  function HikeFly(p) {
+    var hf = useHikeFly();
+    var list = hf ? hf.routes.filter(function (r) { return r.site === p.site.id; }) : [];
+    if (!list.length) return null;
+    return h('div', { className: 'pt-dlg-part' },
+      h('h3', { className: 'pt-h4' }, 'Hike & Fly'),
+      h('ul', { className: 'pt-hf' }, list.map(function (r, i) {
+        return h('li', { key: i },
+          h('p', null, h('b', null, 'ab ' + r.from), ' · ' + fmtKm(r.km) + ' · ↑ ' + fmtAlt(r.up) + ' m'),
+          h('p', { className: 'pt-small' }, 'ca. ' + fmtH(r.hours) + ' gemütlich (DIN 33466) · ' + fmtH(r.hoursFast) + ' bei 500 Hm/h'),
+          r.gkg && h('p', { className: 'pt-small pt-muted' }, r.gkg),
+          r.snapEnd > 60 && h('p', { className: 'pt-small pt-muted' }, 'Die letzten rund ' + Math.round(r.snapEnd / 10) * 10 + ' m zum Startplatz führen über Wiese, ohne eingetragenen Weg.'),
+          p.onShowRoute && h(G.Button, { variant: 'quiet', className: 'pt-btn-sm', onClick: function () { p.onShowRoute(r); } }, 'Auf der Karte zeigen'));
+      })),
+      h('p', { className: 'pt-small pt-muted' }, 'Berechnet auf Wegen aus OpenStreetMap – Vorschlag, vor Ort prüfen. Wildruhezonen, Alpbetrieb und Wegrechte beachten.'));
+  }
+
+  // Höhenprofil als SVG
+  function Profile(p) {
+    var pts = p.profile, W = 320, H = 96, maxD = pts[pts.length - 1][0] || 1;
+    var lo = Math.floor(p.min / 100) * 100, hi = Math.ceil(p.max / 100) * 100;
+    if (hi - lo < 200) hi = lo + 200;
+    function X(d) { return (d / maxD * (W - 40) + 36).toFixed(1); }
+    function Y(e) { return (H - 18 - (e - lo) / (hi - lo) * (H - 28)).toFixed(1); }
+    var step = Math.max(1, Math.floor(pts.length / 300));
+    var line = pts.filter(function (_, i) { return i % step === 0 || i === pts.length - 1; }).map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ');
+    return h('figure', { className: 'pt-profile' },
+      h('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Höhenprofil von ' + fmtAlt(Math.round(pts[0][1])) + ' bis ' + fmtAlt(Math.round(pts[pts.length - 1][1])) + ' m, höchster Punkt ' + fmtAlt(Math.round(p.max)) + ' m' },
+        h('polygon', { className: 'pt-profile-area', points: X(0) + ',' + (H - 18) + ' ' + line + ' ' + X(maxD) + ',' + (H - 18) }),
+        h('polyline', { className: 'pt-profile-line', points: line }),
+        h('text', { x: 32, y: 14, textAnchor: 'end' }, fmtAlt(hi)),
+        h('text', { x: 32, y: H - 18, textAnchor: 'end' }, fmtAlt(lo)),
+        h('text', { x: 36, y: H - 4 }, '0 km'),
+        h('text', { x: W - 4, y: H - 4, textAnchor: 'end' }, fmtKm(maxD))));
+  }
+
+  var RATES = [[300, 'gemütlich – 300 Hm/h (DIN 33466)'], [400, 'zügig – 400 Hm/h'], [500, 'sportlich – 500 Hm/h'], [600, 'sehr sportlich – 600 Hm/h']];
+  function RoutePlanner(p) {
+    var pl = p.plan, r = pl.result, hf = useHikeFly();
+    var g = useState(false), gpxOpen = g[0], setGpxOpen = g[1];
+    var gpx = r && !r.error ? window.GKGRoute.gpx(r, 'GKG Route') : '';
+    function download() {
+      try {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([gpx], { type: 'application/gpx+xml' }));
+        a.download = 'gkg-route.gpx'; document.body.appendChild(a); a.click(); a.remove();
+      } catch (e) { p.notify('Herunterladen geht hier nicht – bitte den Text kopieren.'); }
+    }
+    var classes = r && r.byClass ? Object.keys(r.byClass).map(function (k) { return [k, r.byClass[k]]; }).sort(function (a, b) { return b[1] - a[1]; }) : [];
+    var total = classes.reduce(function (t, c) { return t + c[1]; }, 0) || 1;
+    return h('div', { className: 'pt-panel pt-planner' },
+      h('h2', null, 'Route planen'),
+      h('p', { className: 'pt-small' }, 'Tippe auf die Karte für Start, Zwischenpunkte und Ziel – die Route folgt Wegen und Pfaden. Punkte lassen sich verschieben. Ein Tipp auf einen Startplatz setzt ihn als Punkt.'),
+      hf && hf.routes.length > 0 && h(UI.Field, { id: 'pl-hf', label: 'Oder Hike & Fly zu einem Startplatz' },
+        h('select', { id: 'pl-hf', value: '', onChange: function (e) { var rr = hf.routes[+e.target.value]; if (rr) p.onHikeFly(rr); } },
+          h('option', { value: '' }, 'Route wählen …'),
+          hf.routes.map(function (rr, i) { return h('option', { key: i, value: i }, siteById(rr.site).name + ' ab ' + rr.from); }))),
+      h(UI.Field, { id: 'pl-rate', label: 'Tempo' },
+        h('select', { id: 'pl-rate', value: pl.rate, onChange: function (e) { p.onRate(+e.target.value); } },
+          RATES.map(function (x) { return h('option', { key: x[0], value: x[0] }, x[1]); }))),
+      pl.loading && h('p', { className: 'pt-small', role: 'status' }, 'Wegnetz wird geladen …'),
+      h('p', { className: 'pt-small', role: 'status' }, pl.points.length === 0 ? 'Noch kein Punkt gesetzt.' : pl.points.length === 1 ? 'Start gesetzt – jetzt das Ziel antippen.' : pl.points.length + ' Punkte'),
+      pl.points.length > 0 && h('div', { className: 'pt-actions' },
+        h(G.Button, { variant: 'quiet', className: 'pt-btn-sm', onClick: p.onUndo }, 'Letzten Punkt entfernen'),
+        pl.points.length > 1 && h(G.Button, { variant: 'quiet', className: 'pt-btn-sm', onClick: p.onReverse }, 'Umkehren'),
+        h(G.Button, { variant: 'ghost', className: 'pt-btn-sm', onClick: p.onClear }, 'Neu')),
+      r && r.error && h('p', { className: 'pt-error', role: 'alert' }, r.error),
+      r && !r.error && h(Fragment, null,
+        h('dl', { className: 'pt-route-stats' },
+          h('div', null, h('dt', null, 'Distanz'), h('dd', null, fmtKm(r.km))),
+          h('div', null, h('dt', null, 'Aufstieg'), h('dd', null, '↑ ' + fmtAlt(Math.round(r.up)) + ' m')),
+          h('div', null, h('dt', null, 'Abstieg'), h('dd', null, '↓ ' + fmtAlt(Math.round(r.down)) + ' m')),
+          h('div', null, h('dt', null, 'Gehzeit'), h('dd', null, fmtH(r.hours)))),
+        h('p', { className: 'pt-small pt-muted' }, 'Höchster Punkt ' + fmtAlt(Math.round(r.maxEle)) + ' m ü. M. · Zeit nach DIN 33466 beim gewählten Tempo, ohne Pausen.'),
+        h(Profile, { profile: r.profile, min: r.minEle, max: r.maxEle }),
+        h('p', { className: 'pt-small' }, h('b', null, 'Wegarten: '), classes.slice(0, 4).map(function (c) { return window.GKGRoute.LABEL[c[0]] + ' ' + Math.round(c[1] / total * 100) + ' %'; }).join(' · ')),
+        h('div', { className: 'pt-actions' },
+          h(G.Button, { variant: 'quiet', className: 'pt-btn-sm', onClick: function () { setGpxOpen(true); } }, 'GPX'),
+          h(G.Button, { variant: 'ghost', className: 'pt-btn-sm', onClick: p.onFit }, 'Ganze Route zeigen'))),
+      h('p', { className: 'pt-small pt-muted' }, 'Wege aus OpenStreetMap (Overture), ohne Schwierigkeitsgrad. Vor Ort prüfen; Wildruhezonen und Alpbetrieb beachten. Planbar im Glarnerland und in der Linthebene.'),
+      h(Dialog, { open: gpxOpen, id: 'gpx', title: 'Route als GPX', eyebrow: 'Für Uhr, Vario oder App', wide: true, onClose: function () { setGpxOpen(false); },
+        footer: function (close) { return h('div', { className: 'pt-actions' }, h(G.Button, { variant: 'primary', onClick: download }, 'Herunterladen'), h(G.Button, { variant: 'ghost', onClick: close }, 'Schliessen')); } },
+        h('p', { className: 'pt-small' }, 'Falls das Herunterladen nicht klappt: Text markieren und in eine Datei «route.gpx» kopieren.'),
+        h('textarea', { className: 'pt-pre', readOnly: true, value: gpx, rows: 10, 'aria-label': 'GPX-Text' })));
+  }
+
   function Legend(p) {
     return h('ul', { className: 'pt-legend', 'aria-label': 'Legende' },
       h('li', null, h('span', { className: 'pt-legend-start', 'aria-hidden': true }), 'Startplatz – Farbe zeigt den Flugstatus (Beispiel)'),
       h('li', null, h('span', { className: 'pt-legend-landing', 'aria-hidden': true }), 'Landeplatz'),
       p.wx && h('li', null, h('span', { className: 'pt-legend-wx', 'aria-hidden': true }), 'Windstation: Pfeil zeigt, wohin der Wind weht; Zahl in km/h' + (p.wx.live ? '' : ' (Beispielwerte)')),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-pfad', 'aria-hidden': true }), 'Pfad'),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-fahrweg', 'aria-hidden': true }), 'Fahrweg'),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-hikefly', 'aria-hidden': true }), 'Hike & Fly (berechnet)'),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-seilbahn', 'aria-hidden': true }), 'Seilbahn'),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-material', 'aria-hidden': true }), 'Materialseilbahn – Kabel!'),
+      h('li', null, h('span', { className: 'pt-legend-ln pt-ln-strom', 'aria-hidden': true }), 'Stromleitung'),
       h('li', null, 'Gelände 1,3-fach überhöht'));
   }
+
+  // Route, die ein Pop-up auf einer Gebietsseite zeigen will – Fluggebiete übernimmt sie beim Öffnen
+  var pendingRoute = null;
 
   function Areas(p) {
     var s = useState(null), sel = s[0], setSel = s[1];
     var d = useState(null), dlg = d[0], setDlg = d[1];
+    var pl = useState({ on: false, points: [], rate: 300, result: null, loading: false }), plan = pl[0], setPlan = pl[1];
+    var planRef = React.useRef(plan); planRef.current = plan;
+    var netRef = React.useRef(null);
     var apiRef = React.useRef(null);
+
+    // Route neu rechnen und auf die Karte bringen
+    function compute(next) {
+      var api = apiRef.current, net = netRef.current;
+      var result = next.points.length > 1 && net ? window.GKGRoute.route(net, next.points, { rate: next.rate }) : null;
+      var n = Object.assign({}, next, { result: result, loading: false });
+      setPlan(n);
+      if (api) {
+        api.showRoute(result && !result.error ? result.coords : null);
+        api.setWaypoints(n.on ? n.points : [], function (i, ll) { var c = planRef.current, pts = c.points.slice(); pts[i] = ll; compute(Object.assign({}, c, { points: pts })); });
+      }
+      return n;
+    }
+    function ensureNet(then) {
+      if (netRef.current) return then();
+      setPlan(Object.assign({}, planRef.current, { loading: true }));
+      (apiRef.current ? apiRef.current.network() : window.GKGMap.loadNetwork()).then(function (net) {
+        netRef.current = net; setPlan(Object.assign({}, planRef.current, { loading: false })); then();
+      }, function () { setPlan(Object.assign({}, planRef.current, { loading: false, result: { error: 'Das Wegnetz konnte nicht geladen werden.' } })); });
+    }
+    function togglePlan() {
+      if (planRef.current.on) { compute({ on: false, points: [], rate: planRef.current.rate, result: null, loading: false }); return; }
+      setSel(null);
+      var n = Object.assign({}, planRef.current, { on: true });
+      setPlan(n);
+      ensureNet(function () { compute(Object.assign({}, planRef.current, { on: true })); });
+    }
+    function addPoint(ll) {
+      var c = planRef.current;
+      if (!c.on) return;
+      compute(Object.assign({}, c, { points: c.points.concat([ll]) }));
+    }
+    function startHikeFly(r) {
+      setDlg(null); setSel(null);
+      var pts = [r.fromC, [siteById(r.site).lon, siteById(r.site).lat]];
+      setPlan(Object.assign({}, planRef.current, { on: true, points: pts }));
+      ensureNet(function () {
+        var n = compute(Object.assign({}, planRef.current, { on: true, points: pts }));
+        if (n.result && !n.result.error && apiRef.current) apiRef.current.fitLine(n.result.coords);
+      });
+    }
+    // Karte bereit: Klicks für den Planer abonnieren, eine vom Gebiet mitgebrachte Route zeigen
+    function onReady(api) {
+      api.onClick(function (ll) { addPoint([ll.lng, ll.lat]); });
+      if (pendingRoute) { var r = pendingRoute; pendingRoute = null; startHikeFly(r); }
+    }
     var wx = p.wx;
     var site = sel && sel.type === 'site' ? siteById(sel.id) : null;
     var area = sel && sel.type === 'area' ? areaById(sel.id) : null;
@@ -346,7 +522,10 @@
     var starts = D.sites.filter(function (x) { return x.kind === 'start'; }).length;
     var landings = D.sites.length - starts;
     function pickArea(id) { setSel({ type: 'area', id: id }); if (apiRef.current) apiRef.current.focusArea(id); }
-    function pickSite(id) { setSel({ type: 'site', id: id }); setDlg(id); }
+    function pickSite(id) {
+      if (planRef.current.on) { var x = siteById(id); addPoint([x.lon, x.lat]); return; }
+      setSel({ type: 'site', id: id }); setDlg(id);
+    }
     function pickStation(id) {
       setSel({ type: 'station', id: id });
       var st = wx && wx.stations.filter(function (x) { return x.id === id; })[0];
@@ -361,11 +540,20 @@
           })),
         h('div', { className: 'pt-map-layout' },
           h('div', null,
-            h(Map3D, { apiRef: apiRef, wx: wx, selected: site ? site.id : null, onSelect: pickSite, onStation: pickStation, onOverview: function () { setSel(null); } }),
+            h(Map3D, { apiRef: apiRef, wx: wx, selected: site && !plan.on ? site.id : null, onSelect: pickSite, onStation: pickStation, onOverview: function () { setSel(null); }, onPlan: togglePlan, planning: plan.on, onReady: onReady }),
             h(Legend, { wx: wx }),
             h(StationNote, { wx: wx })),
           h('div', { 'aria-live': 'polite' },
-            site ? h(SitePanel, { site: site, wx: wx, onInfo: function () { setDlg(site.id); } })
+            plan.on ? h(RoutePlanner, {
+              plan: plan, notify: p.notify,
+              onRate: function (v) { compute(Object.assign({}, planRef.current, { rate: v })); },
+              onUndo: function () { var c = planRef.current; compute(Object.assign({}, c, { points: c.points.slice(0, -1) })); },
+              onReverse: function () { var c = planRef.current; compute(Object.assign({}, c, { points: c.points.slice().reverse() })); },
+              onClear: function () { compute(Object.assign({}, planRef.current, { points: [] })); },
+              onFit: function () { var r = planRef.current.result; if (r && r.coords && apiRef.current) apiRef.current.fitLine(r.coords); },
+              onHikeFly: startHikeFly
+            })
+            : site ? h(SitePanel, { site: site, wx: wx, onInfo: function () { setDlg(site.id); } })
               : station ? h(StationPanel, { station: station, onSite: pickSite })
               : area ? h(Fragment, null,
                   h(G.SpotCard, Object.assign({ key: area.id }, spotProps(area))),
@@ -380,7 +568,7 @@
         h('p', { className: 'pt-source' }, 'Koordinaten aus den SHV-Infotafeln, der DHV-Geländedatenbank, Paragliding365 und braunwald.ch, jeweils gegen das Höhenmodell geprüft. Plätze mit Hinweis «Vom Ressort zu bestätigen» sind unsicher. Wind: flightbuddyki.ch (WindBuddy/FANET, Holfuy, MeteoSchweiz). Relief aus offenen Höhendaten (Terrain Tiles, u. a. EU-DEM © Copernicus); im Live-Betrieb ist das swisstopo-Luftbild vorgesehen.')),
       h(Section, { id: 'alle', title: 'Alle Gebiete' },
         h('div', { className: 'pt-grid' }, D.areas.map(function (x) { return h(G.SpotCard, Object.assign({ key: x.id }, spotProps(x))); }))),
-      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: wx, onClose: function () { setDlg(null); }, onPick: function (id) { setDlg(id); setSel({ type: 'site', id: id }); } }));
+      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: wx, onClose: function () { setDlg(null); }, onPick: function (id) { setDlg(id); setSel({ type: 'site', id: id }); }, onShowRoute: startHikeFly }));
   }
 
   function SiteTable(p) {
@@ -444,7 +632,7 @@
             h('p', null, 'Wind, Webcam und Gebietsmeldung prüfen. Die Entscheidung zu starten liegt immer bei dir als Pilot/in.'),
             h('p', null, h('a', { href: '#wetter' }, 'Windwerte ansehen'))),
           h(JahreskarteTeaser)))),
-      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: p.wx, onArea: true, onClose: function () { setDlg(null); }, onPick: setDlg }));
+      h(SiteDialog, { site: dlg ? siteById(dlg) : null, wx: p.wx, onArea: true, onClose: function () { setDlg(null); }, onPick: setDlg, onShowRoute: function (r) { pendingRoute = r; go('fluggebiete'); } }));
   }
 
   /* ---------- Wetter, Sport, Verein ---------- */

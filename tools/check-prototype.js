@@ -1,7 +1,7 @@
 // Prüft den gebauten Prototyp: jede Seite auf Desktop- und Handy-Breite, hell und dunkel.
 // Meldet JavaScript-Fehler und seitliches Überlaufen, spielt Kauf, Kontrolle, Verwaltung und «Mein GKG» durch
 // und legt Bildschirmfotos in build/prototype-shots/ ab. React und MapLibre werden aus node_modules geliefert,
-// flightbuddyki.ch durch Testdaten ersetzt (einmal auch abgeschaltet, um die Beispielwerte zu prüfen).
+// das Wetter-Backend durch Testdaten ersetzt (einmal auch abgeschaltet, um die Beispielwerte zu prüfen).
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
@@ -18,7 +18,7 @@ const ROUTES = [
   { r: 'start' }, { r: 'fluggebiete' }, { r: 'gebiet-braunwald' }, { r: 'gebiet-hirzli' }, { r: 'wetter' }, { r: 'sport' }, { r: 'verein' },
   { r: 'shop' }, { r: 'jahreskarte' }, { r: 'kontrolle' },
   { r: 'verwaltung', role: 'praesidium' }, { r: 'verwaltung-mitglieder', role: 'aktuariat' }, { r: 'verwaltung-rechnungen', role: 'kasse' },
-  { r: 'verwaltung-buchhaltung', role: 'kasse' }, { r: 'verwaltung-karten', role: 'fluggebiete' }, { r: 'verwaltung-rollen', role: 'admin' },
+  { r: 'verwaltung-buchhaltung', role: 'kasse' }, { r: 'verwaltung-karten', role: 'fluggebiete' }, { r: 'verwaltung-vertraege', role: 'praesidium' }, { r: 'verwaltung-rollen', role: 'admin' },
   { r: 'mein-gkg', member: null }, { r: 'mein-gkg', member: 'M-1001', shot: 'mein-gkg-lea' }, { r: 'mein-gkg-daten', member: 'M-1001' },
   { r: 'mein-gkg-rechnungen', member: 'M-1001' }, { r: 'mein-gkg-karte', member: 'M-1003' }, { r: 'mein-gkg-mitgliedschaft', member: 'M-1001' },
   { r: 'mein-gkg-einstellungen', member: 'M-1001' }
@@ -51,13 +51,17 @@ async function open(browser, vp, scheme, opts = {}) {
     if (!key) return route.abort();
     route.fulfill({ path: path.join(root, 'node_modules', LIBS[key]), contentType: 'text/javascript' });
   });
-  await ctx.route('https://flightbuddyki.ch/**', route => opts.offline ? route.abort() : route.fulfill({ contentType: 'application/json', body: JSON.stringify(STATIONS) }));
+  // Wetter kommt über das GKG-Backend (/api/wetter/stationen, siehe tools/serve.js); im Test ersetzt durch Testdaten
+  await ctx.route('**/api/wetter/stationen', route => opts.offline
+    ? route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'nicht erreichbar', stations: [], meta: { stale: true } }) })
+    : route.fulfill({ contentType: 'application/json', body: JSON.stringify(STATIONS) }));
+  await ctx.route('https://flightbuddyki.ch/**', route => route.abort());
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => {
     if (m.type() !== 'error' || /fonts\.g/.test(m.text())) return;
-    if (opts.offline && /ERR_FAILED/.test(m.text())) return; // gewollt: flightbuddyki.ch abgeschaltet
+    if (opts.offline && /ERR_FAILED|503/.test(m.text())) return; // gewollt: Wetter abgeschaltet
     errors.push(m.text());
   });
   return { ctx, page, errors };
@@ -269,11 +273,14 @@ function result(name, ok, detail) {
     const markers = await m.page.locator('.pt-mk').count();
     const wx = await m.page.locator('.pt-wx').count();
     await m.page.screenshot({ path: path.join(shots, `karte.${vp}.${scheme}.png`) });
-    let picked = null, tafel = null, afterEsc = null, station = null;
+    let picked = null, tafel = null, afterEsc = null, station = null, bars = 0, hikefly = 0;
+    const names = await m.page.locator('.pt-lb').count();
     if (ready) {
       await m.page.locator('.pt-mk', { hasText: 'Hüsliberg' }).first().click();
       await m.page.waitForTimeout(2500);
       tafel = await m.page.locator('dialog[open] #shv-t').textContent().catch(() => null);
+      bars = await m.page.locator('dialog[open] .pt-fc-bar').count();
+      hikefly = await m.page.locator('dialog[open] .pt-hf li').count();
       await m.page.screenshot({ path: path.join(shots, `karte-infotafel.${vp}.${scheme}.png`) });
       await m.page.keyboard.press('Escape');
       await m.page.waitForTimeout(300);
@@ -285,9 +292,69 @@ function result(name, ok, detail) {
       station = await m.page.locator('.pt-sitepanel .gkg-title').first().textContent().catch(() => null);
     }
     const overflow = await m.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    const ok = ready && markers === expected && wx === STATIONS.stations.length && picked === 'Hüsliberg' && tafel === 'SHV-Infotafel Schänis' && afterEsc === 0 && /^Teststation/.test(station || '') && overflow <= 0 && !m.errors.length;
-    result(`3D-Karte ${vp} ${scheme}`, ok, `bereit ${ready ? 'nach ' + (loadMs / 1000).toFixed(1) + ' s' : 'NEIN'}, ${markers}/${expected} Plätze, ${wx} Stationen, Pop-up «${tafel}», Esc schliesst ${afterEsc === 0 ? 'ja' : 'nein'}, Auswahl «${picked}», Station «${station}»${overflow > 0 ? ', ' + overflow + 'px zu breit' : ''}${m.errors.length ? ', Fehler: ' + m.errors.slice(0, 3).join(' | ') : ''}`);
+    const ok = ready && markers === expected && wx === STATIONS.stations.length && names > 3 && picked === 'Hüsliberg' && tafel === 'SHV-Infotafel Schänis' && bars === 10 && hikefly >= 1 && afterEsc === 0 && /^Teststation/.test(station || '') && overflow <= 0 && !m.errors.length;
+    result(`3D-Karte ${vp} ${scheme}`, ok, `bereit ${ready ? 'nach ' + (loadMs / 1000).toFixed(1) + ' s' : 'NEIN'}, ${markers}/${expected} Plätze, ${wx} Stationen, ${names} Namen, Pop-up «${tafel}» mit ${bars} Prognose-Balken und ${hikefly} Hike-&-Fly-Route(n), Esc schliesst ${afterEsc === 0 ? 'ja' : 'nein'}, Auswahl «${picked}», Station «${station}»${overflow > 0 ? ', ' + overflow + 'px zu breit' : ''}${m.errors.length ? ', Fehler: ' + m.errors.slice(0, 3).join(' | ') : ''}`);
     await m.ctx.close();
+  }
+
+  // Routenplaner (Desktop und Handy): Hike & Fly wählen, Werte und Profil, GPX, Punkt entfernen; Ebenen aus- und einblenden; 2D
+  for (const vp of ['desktop', 'phone']) {
+    const m = await open(browser, vp, 'light');
+    await m.page.goto(BASE + '#fluggebiete');
+    await m.page.waitForSelector('.pt-map3d-tools', { timeout: 60000 });
+    await m.page.getByRole('button', { name: 'Route planen' }).click();
+    await m.page.selectOption('#pl-hf', { label: 'Obere Bogmen ab Landeplatz Rufi' });
+    const stats = await m.page.waitForSelector('.pt-route-stats', { timeout: 20000 }).then(e => e.textContent(), () => '');
+    await m.page.waitForTimeout(3000);
+    await m.page.screenshot({ path: path.join(shots, `planer.${vp}.light.png`), fullPage: vp === 'phone' });
+    const profile = await m.page.locator('.pt-profile polyline').count();
+    const wps = await m.page.locator('.pt-wp').count();
+    await m.page.getByRole('button', { name: 'GPX', exact: true }).click();
+    const gpx = await m.page.locator('dialog[open] textarea').inputValue();
+    await m.page.keyboard.press('Escape');
+    await m.page.getByRole('button', { name: 'Letzten Punkt entfernen' }).click();
+    const afterUndo = await m.page.locator('.pt-wp').count();
+    await m.page.getByRole('button', { name: 'Planer schliessen' }).click();
+    await m.page.getByRole('button', { name: 'Ebenen' }).click();
+    const before = await m.page.locator('.pt-lb').count();
+    await m.page.getByLabel('Ortsnamen und Gipfel').uncheck();
+    const hidden = await m.page.locator('.pt-lb').count();
+    await m.page.getByLabel('Ortsnamen und Gipfel').check();
+    await m.page.getByRole('button', { name: 'Fertig' }).click();
+    await m.page.getByRole('button', { name: 'Hüsliberg', exact: true }).click();
+    await m.page.waitForTimeout(3000);
+    await m.page.getByRole('button', { name: '2D-Ansicht' }).click();
+    await m.page.waitForTimeout(4000);
+    await m.page.screenshot({ path: path.join(shots, `karte-2d.${vp}.light.png`) });
+    const overflow = await m.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const ok = /km/.test(stats) && /↑/.test(stats) && profile === 1 && wps === 2 && /<gpx[\s\S]*<trkpt/.test(gpx) && afterUndo === 1 && before > 0 && hidden === 0 && overflow <= 0 && !m.errors.length;
+    result(`Routenplaner ${vp}`, ok, `Werte «${stats.replace(/\s+/g, ' ').trim()}», Profil ${profile ? 'da' : 'fehlt'}, ${wps} Wegpunkte, GPX ${/<trkpt/.test(gpx) ? 'ok' : 'fehlt'}, nach Entfernen ${afterUndo}, Namen ${before} → ${hidden} ausgeblendet${overflow > 0 ? ', ' + overflow + 'px zu breit' : ''}${m.errors.length ? ', Fehler: ' + m.errors.slice(0, 3).join(' | ') : ''}`);
+    await m.ctx.close();
+  }
+
+  // Verträge: Präsidium beschliesst, Kasse verbucht die Pauschale
+  {
+    const { ctx, page, errors } = await open(browser, 'desktop', 'light');
+    await page.goto(BASE + '#verwaltung-vertraege');
+    await page.evaluate(() => window.GKGStore.actions.setRole('praesidium'));
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Als beschlossen markieren' }).click();
+    await page.getByRole('button', { name: 'Beschlossen', exact: true }).click();
+    await page.waitForTimeout(300);
+    const decided = await page.getByText(/^Beschlossen \d/).count();
+    await page.evaluate(() => window.GKGStore.actions.setRole('kasse'));
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Jahrespauschale verbuchen' }).click();
+    await page.fill('#ct-amount', '480');
+    await page.getByRole('button', { name: 'Buchen', exact: true }).click();
+    await page.goto(BASE + '#verwaltung-buchhaltung');
+    await page.waitForTimeout(300);
+    const booked = await page.locator('.gkg-table', { hasText: 'FlightBuddyKI' }).count();
+    await page.goto(BASE + '#gebiet-huesliberg');
+    await page.locator('button.pt-site-name', { hasText: 'Hüsliberg' }).click();
+    const note = await page.locator('dialog[open] .pt-fc .pt-wx-note').textContent();
+    result('Verträge', decided > 0 && booked > 0 && /Vertrag ist aktiv/.test(note) && !errors.length, `Beschluss ${decided ? 'ja' : 'nein'}, Buchung ${booked ? 'ja' : 'nein'}, Pop-up «${note.trim().slice(0, 60)}…»${errors.length ? ', Fehler: ' + errors.join(' | ') : ''}`);
+    await ctx.close();
   }
 
   await browser.close();

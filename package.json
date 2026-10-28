@@ -6,10 +6,13 @@
   "scripts": {
     "previews": "node tools/render-previews.js",
     "prototype": "node tools/build-prototype.js",
-    "check": "node tools/build-prototype.js && node tools/check-prototype.js",
+    "check": "node --test backend/wetter.test.js && node tools/build-prototype.js && node tools/check-prototype.js",
     "serve": "node tools/build-prototype.js && node tools/serve.js",
     "tiles": "python3 tools/build-tiles.py",
-    "poster": "node tools/build-prototype.js && node tools/render-map-poster.js"
+    "karte": "python3 tools/fetch-overture.py && python3 tools/build-mapdata.py && node tools/build-routes.js && python3 tools/build-tiles.py",
+    "poster": "node tools/build-prototype.js && node tools/render-map-poster.js",
+    "test:backend": "node --test backend/wetter.test.js",
+    "spots": "node tools/export-spots.js"
   },
   "devDependencies": {
     "maplibre-gl": "^5.24.0",

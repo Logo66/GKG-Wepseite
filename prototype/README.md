@@ -9,20 +9,22 @@ Zeigt dem Vorstand, wie sich die neue Website anfühlt – mit den Bausteinen au
 | Hash | Seite | Was man ausprobieren kann |
 | --- | --- | --- |
 | `#start` | Startseite | Hero, Wind der Stationen, Gebietsmeldungen, Jahreskarte, Klub, Kollektion |
-| `#fluggebiete` | Fluggebiete | 3D-Karte mit 11 Start- und 4 Landeplätzen und den Windstationen: Platz antippen → Pop-up mit Eckdaten, Wind in der Nähe und SHV-Infotafel; Station antippen → Messwerte; Wind ein/aus, 2D/3D |
+| `#fluggebiete` | Fluggebiete | 3D-Karte mit 11 Start- und 4 Landeplätzen, Windstationen, Ortsnamen, Gipfeln, Strassen, Wegen, Seilbahnen und Hike-&-Fly-Routen. Platz antippen → Pop-up mit Eckdaten, Wind in der Nähe, Prognose (Beispiel), Hike & Fly und SHV-Infotafel; Station antippen → Messwerte. «Ebenen» blendet aus, «Route planen» öffnet den Routenplaner (Punkte antippen, Tempo, Höhenprofil, GPX), 2D/3D |
 | `#gebiet-<id>` | Gebietsseite | 3D-Karte des Gebiets, Tabelle der Plätze (Name antippen → Pop-up), Link zur SHV-Tafel; z. B. `#gebiet-braunwald` |
 | `#wetter` | Wetter | Alle Stationen im Umkreis von 35 km, Aktualisieren, Quellen und Ampel-Schwellen |
 | `#jahreskarte` | Kauf der Jahreskarte | Angebot → Profil mit Foto → Bezahlen → fertige Karte mit QR; Karte und Buchung landen in der Verwaltung |
 | `#kontrolle` | Kontrolle am Startplatz | Scan simulieren: gültige oder gesperrte Karte – Status aus der Klub-Datenbank |
 | `#verein` | Verein | Mitgliedschaft, Beitrittsformular (wird zum Antrag beim Aktuariat), Kontakt |
 | `#sport`, `#shop` | Inhaltsseiten, Shop | GKG-Cup, Kollektion mit Grösse/Farbe, Gebrauchtmarkt |
-| `#verwaltung` | Verwaltung | Ressort oben wählen: Übersicht, Mitglieder mit Anträgen, Beiträge & Rechnungen (Beitragslauf, Zahlung erfassen, Mahnung, QR-Zahlteil), Buchhaltung (Journal, Erfolgsrechnung, Bilanz, Kontenplan), Jahreskarten (sperren), Rollen & Zugänge. Unterseiten `#verwaltung-mitglieder`, `-rechnungen`, `-buchhaltung`, `-karten`, `-rollen` |
+| `#verwaltung` | Verwaltung | Ressort oben wählen: Übersicht, Mitglieder mit Anträgen, Beiträge & Rechnungen (Beitragslauf, Zahlung erfassen, Mahnung, QR-Zahlteil), Buchhaltung (Journal, Erfolgsrechnung, Bilanz, Kontenplan), Jahreskarten (sperren), Verträge & Dienste (Option Prognosen von FlightBuddyKI), Rollen & Zugänge. Unterseiten `#verwaltung-mitglieder`, `-rechnungen`, `-buchhaltung`, `-karten`, `-vertraege`, `-rollen` |
 | `#mein-gkg` | Mein GKG | Als Beispielmitglied anmelden: Adresse und Foto ändern, Beitrag online bezahlen → Jahreskarte, Kategorie wechseln, Austritt, Einwilligungen, gespeicherte Daten ansehen |
 
 ## Woher die Inhalte kommen
 
 - **Gebietstexte** (Zugang, Regeln, Gefahren): von gkg.ch übernommen (Suchindex, Stand 2025) – vor dem Go-Live mit dem Ressort Fluggebiete prüfen. Höhen und Windrichtungen fehlen bewusst, ausser beim Gumen (1'875 m ü. M.).
-- **Wind:** live von [flightbuddyki.ch](https://flightbuddyki.ch) (WindBuddy über FANET, Holfuy, MeteoSchweiz), siehe [`stations.js`](stations.js). Ohne Verbindung sechs erfundene Beispielstationen, als solche beschriftet.
+- **Wind:** live von [flightbuddyki.ch](https://flightbuddyki.ch) (WindBuddy über FANET, Holfuy, MeteoSchweiz) über den Wetter-Proxy `backend/wetter.js` – lokal mit `npm run serve`. Ohne Verbindung (z. B. im Artifact) sechs erfundene Beispielstationen, als solche beschriftet.
+- **Prognose:** Option von FlightBuddyKI, im Prototyp mit erfundenen Beispielwerten im Format der echten Schnittstelle ([`forecast.js`](forecast.js), [`docs/FlightBuddyKI-Prognosen.md`](../docs/FlightBuddyKI-Prognosen.md)).
+- **Karte, Namen, Wege:** Overture Maps (© OpenStreetMap-Mitwirkende, ODbL) und offene Höhendaten; Hike-&-Fly-Routen berechnet.
 - **SHV-Infotafeln:** Auszug der Regeln von Hand in `data.js` (`shv`), Link zum offiziellen PDF. Massgebend ist die aktuelle Tafel des SHV.
 - **Beispieldaten:** Flugstatus, Gebietsmeldungen, Shop-Sortiment und -Preise, Inserate in [`data.js`](data.js); Mitglieder, Rechnungen, Buchungen und Karten in [`store.js`](store.js) – alles erfunden.
 - **Start- und Landeplätze:** Koordinaten aus SHV-Infotafeln, DHV-Geländedatenbank, Paragliding365 und braunwald.ch, jeweils gegen das Höhenmodell geprüft. Fünf Plätze tragen den Hinweis «Vom Ressort zu bestätigen». Quellen: [`docs/Quellen.md`](../docs/Quellen.md).
@@ -33,8 +35,8 @@ Zeigt dem Vorstand, wie sich die neue Website anfühlt – mit den Bausteinen au
 ```bash
 npm install
 pip install -r tools/requirements.txt
-npm run tiles        # einmalig: Höhendaten laden und Reliefkacheln rechnen (build/tiles/, ca. 20 s)
-npm run serve        # baut build/prototype/ und startet http://localhost:8080
+npm run karte        # einmalig: Kartendaten von Overture laden, aufbereiten, Hike-&-Fly-Routen und Kacheln rechnen (wenige Minuten)
+npm run serve        # baut build/prototype/ und startet http://localhost:8080 – mit Wetter-Proxy (live, wenn flightbuddyki.ch erreichbar)
 npm run check        # baut und prüft alle Seiten (Desktop/Handy, hell/dunkel) und die Abläufe
 npm run poster       # Standbild der Karte neu rendern (nach Änderungen an Kamera, Kacheln oder Farben)
 ```
@@ -53,10 +55,12 @@ Vorschaubilder der SHV-Tafeln (optional, Rechte vorher klären): `python3 tools/
 | `app.js` | Öffentliche Seiten, Navigation, 3D-Karte, Pop-up mit SHV-Infotafel (React 18, ohne Build-Schritt) |
 | `ui.js` | Gemeinsame Bausteine: Seitenkopf, Abschnitt, Dialog, Formularfeld, Tabs, Formatierung |
 | `stations.js` | Windstationen von flightbuddyki.ch: Abfrage, Umrechnung in km/h, Ampel, Beispielwerte als Rückfall |
+| `forecast.js` | Thermik-Prognose von FlightBuddyKI im Pop-up (Option; Beispielwerte ohne Backend) |
+| `routing.js` | Routenplaner: Wegnetz einlesen, kürzeste Gehzeit (DIN 33466), Höhenprofil, GPX – auch von `tools/build-routes.js` genutzt |
 | `store.js` | Datenhaltung für Verwaltung und Mein GKG: Mitglieder, Rechnungen, Buchungen, Karten, Anträge, Protokoll, Rechte |
 | `admin.js` | Verwaltung für Vorstand und Ressorts |
 | `member.js` | Mein GKG – Selbstverwaltung der Mitglieder |
 | `app.css` | Seitenlayout; Farben, Schriften und Abstände nur über die Tokens |
 | `data.js` | Inhalte: Gebiete, Start- und Landeplätze mit Koordinaten und Quelle, SHV-Infotafeln, Meldungen, Produkte, Inserate |
-| `map3d.js` | 3D-Karte (MapLibre): Laden bei Bedarf, Gelände, Marker, Windstationen, Kamera, Umrechnung nach LV95 |
+| `map3d.js` | 3D-Karte (MapLibre): Laden bei Bedarf, Gelände, Kartengrund, Linien, Namen, Wegnetz, Route, Marker, Windstationen, Kamera, LV95 |
 | `map-poster.jpg`, `map-poster-dark.jpg` | Standbild der Karte für den ersten Moment |

@@ -67,6 +67,7 @@ window.GKGAdmin = (function () {
     else if (mod === 'rechnungen') body = h(Invoices, ctx);
     else if (mod === 'buchhaltung') body = h(Ledger, ctx);
     else if (mod === 'karten') body = h(Cards, ctx);
+    else if (mod === 'vertraege') body = h(Contracts, ctx);
     else body = h(Roles, ctx);
     return h(Fragment, null,
       h(UI.PageHead, { title: 'Verwaltung', lead: 'Für Vorstand und Ressorts: Mitglieder, Beiträge, Buchhaltung und Jahreskarten an einem Ort.' }),
@@ -102,7 +103,7 @@ window.GKGAdmin = (function () {
       var valid = db.cards.filter(function (x) { return x.status === 'gültig'; }).length, blocked = db.cards.length - valid;
       tiles.push(h(G.StatTile, { key: 'k', label: 'Jahreskarten ' + db.season, value: String(valid), hint: blocked + ' gesperrt' }));
     }
-    var areas = { members: S.can(role, 'members.read') || S.can(role, 'members.address'), finance: S.can(role, 'finance.read'), cards: S.can(role, 'cards.read') };
+    var areas = { members: S.can(role, 'members.read') || S.can(role, 'members.address'), finance: S.can(role, 'finance.read'), cards: S.can(role, 'cards.read'), contracts: S.can(role, 'contracts.read') };
     var log = db.log.filter(function (l) { return S.can(role, 'log.read') || areas[l.area]; }).slice(0, 12);
     return h(Fragment, null,
       h('div', { className: 'pt-stats' }, tiles),
@@ -494,6 +495,53 @@ window.GKGAdmin = (function () {
         h(Field, { id: 'card-reason', label: 'Grund' }, h('select', { id: 'card-reason', value: reason, onChange: function (e) { setReason(e.target.value); } }, REASONS.map(function (x) { return h('option', { key: x, value: x }, x); })))));
   }
 
+  /* ---------- Verträge & Dienste ---------- */
+  function Contracts(c) {
+    var db = c.db, decide = S.can(c.role, 'contracts.write'), book = S.can(c.role, 'finance.write');
+    var a = useState(null), ask = a[0], setAsk = a[1];
+    var f = useState(''), amount = f[0], setAmount = f[1];
+    var e = useState(null), err = e[0], setErr = e[1];
+    var list = db.contracts || [];
+    var target = ask && list.filter(function (x) { return x.id === ask.id; })[0];
+    return h(Fragment, null,
+      list.map(function (k) {
+        var acc = S.account(k.account);
+        return h('article', { key: k.id, className: 'pt-panel pt-contract' },
+          h('div', { className: 'pt-contract-head' },
+            h('div', null, h('p', { className: 'pt-eyebrow' }, k.partner), h('h2', null, k.title)),
+            k.status === 'aktiv' ? h(G.FlightStatus, { status: 'go', label: 'Beschlossen ' + date(k.decided) }) : h(G.FlightStatus, { status: 'caution', label: 'Option' })),
+          h('p', null, k.scope),
+          h('dl', { className: 'pt-sitefacts' },
+            h('dt', null, 'Modell'), h('dd', { className: 'pt-dd-text' }, k.model),
+            h('dt', null, 'Betrag'), h('dd', { className: 'pt-dd-text' }, k.fee != null ? 'CHF ' + chf(k.fee) + ' pro Jahr' : 'offen – Angebot von FlightBuddyKI ausstehend'),
+            h('dt', null, 'Konto'), h('dd', { className: 'pt-dd-text' }, k.account + ' ' + (acc ? acc.name : '')),
+            h('dt', null, 'Unterlagen'), h('dd', { className: 'pt-dd-text' }, UI.ext('https://github.com/Logo66/gkg-wepseite/blob/main/' + k.doc, 'Leistungsbeschreibung und Schnittstelle'))),
+          h('p', { className: 'pt-small pt-muted' }, 'Gehört jemand aus dem Vorstand zu FlightBuddyKI, tritt die Person beim Entscheid in den Ausstand.'),
+          h('div', { className: 'pt-actions' },
+            decide && (k.status === 'aktiv'
+              ? h(G.Button, { variant: 'quiet', onClick: function () { setAsk({ id: k.id, what: 'option' }); } }, 'Zurück auf Option')
+              : h(G.Button, { variant: 'primary', onClick: function () { setAsk({ id: k.id, what: 'aktiv' }); } }, 'Als beschlossen markieren')),
+            book && k.status === 'aktiv' && h(G.Button, { variant: 'quiet', onClick: function () { setAmount(''); setErr(null); setAsk({ id: k.id, what: 'buchen' }); } }, 'Jahrespauschale verbuchen'),
+            !decide && !book && h('span', { className: 'pt-small pt-muted' }, c.who + ': nur lesen.')));
+      }),
+      h(UI.Confirm, {
+        open: !!(target && ask.what !== 'buchen'), id: 'contract-ask', title: ask && ask.what === 'aktiv' ? 'Vertrag als beschlossen markieren?' : 'Zurück auf Option?',
+        confirm: ask && ask.what === 'aktiv' ? 'Beschlossen' : 'Zurück auf Option', onClose: function () { setAsk(null); },
+        onConfirm: function () { S.actions.setContract(target.id, ask.what, c.who); c.notify(ask.what === 'aktiv' ? 'Vertrag beschlossen. Die Prognose erscheint in den Pop-ups der Startplätze.' : 'Vertrag wieder auf Option.'); }
+      }, h('p', null, ask && ask.what === 'aktiv' ? 'Im Live-Betrieb schaltet das die Prognose auf gkg.ch frei (GKG_PROGNOSE_AKTIV und Schlüssel von FlightBuddyKI im Backend).' : 'Die Prognose verschwindet wieder von gkg.ch.')),
+      h(Dialog, { open: !!(target && ask.what === 'buchen'), id: 'contract-book', title: 'Jahrespauschale verbuchen', eyebrow: target ? target.partner : '', onClose: function () { setAsk(null); } },
+        target && h(UI.DialogForm, {
+          submit: 'Buchen',
+          onSubmit: function (ev, close) {
+            var v = Number(String(amount).replace(/[’']/g, '').replace(',', '.'));
+            if (!(v > 0)) { setErr('Bitte den Betrag der Rechnung eingeben, z. B. 480.00.'); return; }
+            S.actions.bookContract(target.id, v, c.who); c.notify('Pauschale verbucht: ' + target.account + ' an 1020 Bank.'); close();
+          }
+        },
+          h(Field, { id: 'ct-amount', label: 'Betrag CHF (laut Rechnung)', error: err, input: { type: 'text', inputMode: 'decimal', value: amount, onChange: function (ev) { setAmount(ev.target.value); } } }),
+          h('p', { className: 'pt-hint' }, 'Bucht ' + target.account + ' Wetterdienste an 1020 Bank.'))));
+  }
+
   /* ---------- Rollen & Zugänge ---------- */
   function Roles(c) {
     var keys = Object.keys(S.ROLES);
@@ -504,9 +552,10 @@ window.GKGAdmin = (function () {
       if (row === 'finance') return can('finance.write') ? 'bearbeiten' : can('finance.read') ? 'lesen' : '–';
       if (row === 'cards') return can('cards.write') ? 'sperren' : can('cards.read') ? 'lesen' : '–';
       if (row === 'roles') return can('roles.read') ? 'verwalten' : '–';
+      if (row === 'contracts') return can('contracts.write') ? 'beschliessen' : can('contracts.read') ? 'lesen' : '–';
       return can('log.read') ? 'alles' : 'eigener Bereich';
     }
-    var rows = [['members', 'Mitgliederdaten'], ['requests', 'Anträge'], ['finance', 'Rechnungen und Buchhaltung'], ['cards', 'Jahreskarten'], ['roles', 'Rollen und Zugänge'], ['log', 'Protokoll']];
+    var rows = [['members', 'Mitgliederdaten'], ['requests', 'Anträge'], ['finance', 'Rechnungen und Buchhaltung'], ['cards', 'Jahreskarten'], ['contracts', 'Verträge und Dienste'], ['roles', 'Rollen und Zugänge'], ['log', 'Protokoll']];
     return h(Fragment, null,
       h('div', { className: 'gkg-table-wrap' }, h('table', { className: 'gkg-table' },
         h('caption', null, 'Wer darf was'),
