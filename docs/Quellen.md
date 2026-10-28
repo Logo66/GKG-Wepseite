@@ -57,7 +57,7 @@ Die Auszüge in `prototype/data.js` (`shv`) stammen aus Suchmaschinen-Auszügen 
 - [flightbuddyki.ch](https://flightbuddyki.ch) – BuddyServer, Endpunkt `/api/v1/weather/stations` mit den Quellen FANET (WindBuddy), Holfuy und SwissMetNet. Schnittstelle aus dem Quellcode des BuddyServers übernommen, nicht gegen den laufenden Dienst getestet.
 - [MeteoSchweiz](https://www.meteoschweiz.admin.ch) – Messnetz SwissMetNet; Angabe «Quelle: MeteoSchweiz» Pflicht.
 - [Holfuy](https://holfuy.com) – Nutzung der Werte auf gkg.ch klären.
-- Prognosen (Option): Thermik-Schnittstelle des BuddyServers (`/api/v1/weather/thermik/…`), laut Schnittstelle mit Wetterdaten «ICON-D2 via Open-Meteo (CC BY 4.0)». Details in [FlightBuddyKI-Prognosen.md](FlightBuddyKI-Prognosen.md).
+- Prognosen (Option): Thermik-Schnittstelle des BuddyServers (`/api/v1/weather/thermik/…`), laut Schnittstelle mit Wetterdaten «ICON-D2 via Open-Meteo (CC BY 4.0)»; FlightBuddyKI bezieht sie mit bezahlter Lizenz bei Open-Meteo. Details in [FlightBuddyKI-Prognosen.md](FlightBuddyKI-Prognosen.md).
 
 ## Karte
 

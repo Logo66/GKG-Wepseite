@@ -68,12 +68,15 @@ Quelle: Code des BuddyServers (`modules/weather/thermik/api.py`, `models.py`). D
 | Verfügbarkeit | bestmöglich; Ausfälle zeigt gkg.ch als Hinweis, kein Anspruch auf Rückerstattung bei kurzen Unterbrüchen |
 | Haftung | Die Prognose ist eine Entscheidungshilfe; die Entscheidung zu starten liegt immer bei der Pilotin oder dem Piloten. Dieser Hinweis steht auf gkg.ch bei jeder Prognose. |
 | Datenschutz | Es fliessen keine Personendaten: gkg.ch fragt nur Platz und Tag ab, serverseitig. |
-| Quellen und Lizenzen | Angaben zu Wetterdaten und Berechnung liefert FlightBuddyKI in jeder Antwort; gkg.ch zeigt sie an. |
+| Quellen und Lizenzen | FlightBuddyKI bezieht die Wetterdaten mit eigener, bezahlter Lizenz bei Open-Meteo. Angaben zu Wetterdaten und Berechnung liefert FlightBuddyKI in jeder Antwort; gkg.ch zeigt sie an. |
+
+## Geklärt
+
+- **Lizenz der Wetterdaten:** FlightBuddyKI kauft die Wetterdaten bei Open-Meteo ein (Angabe von FlightBuddyKI, 28.10.2026). Laut Schnittstelle stammen sie aus dem Modell ICON-D2. Die Quellenangabe in der Antwort bleibt und erscheint auf gkg.ch bei jeder Prognose.
 
 ## Offene Punkte
 
 - **Betrag** der Jahrespauschale – Angebot von FlightBuddyKI.
-- **Lizenz der Wetterdaten:** Laut Schnittstelle stammen die Daten aus «ICON-D2 via Open-Meteo (CC BY 4.0)». Nach meinem Kenntnisstand ist die kostenlose Schnittstelle von Open-Meteo nur für nicht-kommerzielle Nutzung gedacht. Ob ein bezahltes Angebot an den Klub eine kommerzielle Lizenz braucht, klärt FlightBuddyKI vor Vertragsabschluss.
 - **Spots anlegen** (IDs aus `docs/flightbuddyki-spots.json`) und Schlüssel für den GKG ausstellen – auf Seite FlightBuddyKI.
 - **Ausstand:** Gehört jemand aus dem Vorstand zu FlightBuddyKI, tritt die Person beim Entscheid in den Ausstand.
 - **Darstellung** mit dem Ressort Sicherheit abstimmen: welche Warnungen hervorgehoben werden, welche Schwellen gelten.
